@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<!-- ============================================================
+  NTiCx 4to Año — "TecnoRed: Misión Conexión" (v4)
+  App educativa gamificada sobre redes informáticas.
+  Materia: Nuevas Tecnologías de la Información y la Conectividad.
+  Escuela Secundaria — Argentina (estudiantes de 15 a 16 años).
+
+  NOVEDAD v4:
+  · Teoría impresa con LETRA AMPLIADA y salto de página forzado
+    cada 3 módulos → exactamente 3 MÓDULOS POR HOJA A4.
+  · Teoría completa por módulo: ¿Qué es? ¿Para qué sirve?
+    ¿Cómo funciona? + Ejemplos cotidianos.
+  · Reporte de evaluación ultra-compacto (sin puntaje/nivel/XP).
+
+  ¿CÓMO ESTÁ ORGANIZADO ESTE ARCHIVO?
+  1) <head>: librerías por CDN (Tailwind, FontAwesome, Fontsource).
+  2) <style>: estilos propios, animaciones isométricas y @media print.
+  3) <body>: HUD (nivel/XP), pestañas, módulos, modal teoría y reporte.
+  4) <script>: estado, trivias, simuladores, teoría y reportes.
+============================================================ -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TecnoRed NTiCx · 4to Año · Misión Conexión</title>
+
+<!-- Tailwind CSS vía CDN (no requiere instalación) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- FontAwesome para iconos -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<!-- Tipografías modernas (Fontsource CDN): Inter para texto, Poppins para títulos -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/css/inter@latest/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/css/poppins@latest/css/400,500,600,700,800.css">
+
+<script>
+  /* Configuración extendida de Tailwind: paleta "Tech Isometric" y fuentes */
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Inter', 'system-ui', 'sans-serif'],
+          display: ['Poppins', 'Inter', 'sans-serif'],
+        },
+        colors: {
+          electrico: '#3b82f6',
+          violetax: '#8b5cf6',
+          menta: '#34d399',
+          neon: '#fb7a1e',
+          noche: '#070c1b',
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+/* ============================================================
+   ESTILOS PERSONALIZADOS — Tech Isometric Art
+   ============================================================ */
+body { font-family:'Inter',sans-serif; background:#070c1b; }
+.font-display { font-family:'Poppins','Inter',sans-serif; }
+
+body::before{
+  content:""; position:fixed; inset:0; z-index:-2;
+  background:
+    radial-gradient(600px 400px at 15% 10%, rgba(59,130,246,.14), transparent 60%),
+    radial-gradient(700px 500px at 85% 20%, rgba(139,92,246,.14), transparent 60%),
+    radial-gradient(600px 500px at 50% 100%, rgba(52,211,153,.08), transparent 60%),
+    #070c1b;
+}
+body::after{
+  content:""; position:fixed; inset:0; z-index:-1; opacity:.5; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(148,163,184,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148,163,184,.05) 1px, transparent 1px);
+  background-size:42px 42px;
+}
+
+.iso-card{
+  background:linear-gradient(160deg, rgba(30,41,59,.85), rgba(15,23,42,.9));
+  border:1px solid rgba(99,102,241,.25);
+  border-radius:1.1rem;
+  box-shadow:0 12px 30px -12px rgba(2,6,23,.9), 0 2px 0 rgba(255,255,255,.03) inset;
+  transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.iso-card:hover{
+  transform:translateY(-5px);
+  border-color:rgba(56,189,248,.55);
+  box-shadow:0 22px 45px -15px rgba(2,6,23,1), 0 0 24px rgba(59,130,246,.25);
+}
+
+@keyframes fadeUp{ from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);} }
+.anim-fade{ animation:fadeUp .45s ease both; }
+@keyframes floaty{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+.floaty{ animation:floaty 3.6s ease-in-out infinite; }
+.floaty-slow{ animation:floaty 5.2s ease-in-out infinite; }
+@keyframes dashmove{ to{ stroke-dashoffset:-60; } }
+.cable{ stroke-dasharray:6 8; animation:dashmove 1.6s linear infinite; }
+.net-node{ cursor:pointer; transition:transform .2s ease, filter .2s ease; }
+.net-node:hover{ transform:scale(1.07); filter:drop-shadow(0 0 10px rgba(56,189,248,.9)); }
+.net-node.selected{ filter:drop-shadow(0 0 12px rgba(251,122,30,.95)); }
+@keyframes orbitSpin{ from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+.sat-orbit{ animation:orbitSpin linear infinite; transform-origin:210px 210px; }
+.orbit-ring{ stroke-opacity:.3; transition:stroke-opacity .3s, stroke-width .3s; cursor:pointer; }
+.orbit-ring.active{ stroke-opacity:1; stroke-width:2.5; }
+@keyframes shake{ 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+.shake{ animation:shake .4s ease; }
+@keyframes popIn{ 0%{transform:scale(.6); opacity:0} 70%{transform:scale(1.08)} 100%{transform:scale(1); opacity:1} }
+.pop-in{ animation:popIn .35s ease both; }
+.confetti-piece{ position:fixed; top:-20px; z-index:140; width:10px; height:14px; pointer-events:none; animation:confettiFall linear forwards; }
+@keyframes confettiFall{ to{ transform:translateY(110vh) rotate(720deg); opacity:.15; } }
+#toastBox{ position:fixed; bottom:22px; left:50%; transform:translateX(-50%); z-index:150; display:flex; flex-direction:column; gap:8px; align-items:center; }
+.toast{ background:rgba(15,23,42,.95); border:1px solid rgba(56,189,248,.5); color:#e2e8f0; padding:.6rem 1.1rem; border-radius:999px; box-shadow:0 10px 30px rgba(2,6,23,.8); animation:toastIn .3s ease both; font-size:.9rem; }
+@keyframes toastIn{ from{opacity:0; transform:translateY(16px)} to{opacity:1; transform:translateY(0)} }
+.arq-chip{ cursor:grab; user-select:none; transition:transform .15s, box-shadow .15s, opacity .2s; }
+.arq-chip:hover{ transform:translateY(-3px) scale(1.04); }
+.arq-chip.selected{ outline:3px solid #fb7a1e; outline-offset:2px; transform:scale(1.05); }
+.arq-chip.ok{ cursor:default; opacity:.95; box-shadow:0 0 0 2px #34d399 inset; }
+.zone-box.drag-over{ border-color:#38bdf8 !important; background:rgba(56,189,248,.08) !important; }
+.zone-box.zone-error{ animation:shake .4s ease; border-color:#f87171 !important; }
+::-webkit-scrollbar{ height:8px; width:9px; }
+::-webkit-scrollbar-track{ background:#0f172a; }
+::-webkit-scrollbar-thumb{ background:#3b82f6; border-radius:8px; }
+.no-scrollbar::-webkit-scrollbar{ display:none; }
+.pkt{ position:absolute; z-index:5; font-size:.68rem; font-weight:700; padding:.25rem .5rem; border-radius:.5rem;
+      background:linear-gradient(135deg,#8b5cf6,#3b82f6); color:#fff; box-shadow:0 0 14px rgba(139,92,246,.8); white-space:nowrap; }
+.mod-card{ cursor:pointer; }
+.mod-card .chip{ font-size:.68rem; padding:.15rem .6rem; border-radius:999px; font-weight:700; }
+.tab-btn{ font-size:.8rem; font-weight:600; padding:.5rem .9rem; border-radius:.75rem .75rem 0 0; color:#94a3b8; transition:.2s; white-space:nowrap; }
+.tab-btn:hover{ color:#7dd3fc; background:rgba(15,23,42,.7); }
+.tab-btn.active{ color:#7dd3fc; background:rgba(30,41,59,.9); border-bottom:3px solid #fb7a1e; }
+
+/* ============================================================
+   ESTILOS COMPACTOS DE IMPRESIÓN (compartidos pantalla/papel)
+   ============================================================ */
+#printArea, #theoryArea{ color:#0f172a; }
+
+/* --- Encabezados mínimos --- */
+.rp-head, .th-head{
+  display:flex; justify-content:space-between; align-items:baseline; gap:2mm;
+  border-bottom:1.5px solid #0f172a; padding-bottom:.8mm; margin-bottom:1.5mm;
+}
+.rp-head b, .th-head b{ font-size:10pt; }
+.rp-head span, .th-head span{ font-size:6.5pt; color:#475569; white-space:nowrap; }
+
+/* --- Datos del estudiante: grilla mínima con inputs subrayados --- */
+.rp-fields{ display:grid; grid-template-columns:1fr 1fr; gap:.8mm 6mm; margin-bottom:1.5mm; }
+.rp-fields label{ display:flex; align-items:baseline; gap:1mm; font-size:6.5pt; font-weight:800; text-transform:uppercase; color:#334155; letter-spacing:.02em; }
+.rp-fields input{ flex:1; min-width:0; border:none; border-bottom:1px solid #94a3b8; background:transparent; font-size:7.8pt; padding:0 .8mm; outline:none; font-family:'Inter',sans-serif; color:#0f172a; }
+.rp-fields input:focus{ border-bottom-color:#3b82f6; }
+
+.rp-sec{ font-size:7.5pt; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:#0f172a; margin:1mm 0; }
+
+/* --- Bloques de módulo: reporte (.rp-mod, compacto) --- */
+.rp-mod, .th-mod{ border:1px solid #cbd5e1; border-radius:3px; margin-bottom:1.2mm; break-inside:avoid; page-break-inside:avoid; overflow:hidden; }
+.rp-mod-h{ background:#f1f5f9; padding:.6mm 2mm; font-size:7pt; font-weight:800; display:flex; justify-content:space-between; gap:2mm; }
+.rp-mod-h span:last-child{ font-weight:600; color:#64748b; }
+.rp-mod-b{ padding:.8mm 2mm; font-size:7.4pt; line-height:1.22; }
+.rp-q{ break-inside:avoid; page-break-inside:avoid; margin-bottom:.5mm; }
+.rp-q p:first-child{ font-weight:600; }
+.rp-ok{ color:#047857; margin-left:3mm; }
+.rp-bad{ color:#b91c1c; margin-left:3mm; }
+.rp-na{ color:#94a3b8; font-style:italic; margin-left:3mm; }
+
+/* --- Firmas compactas --- */
+.rp-signs{ display:grid; grid-template-columns:1fr 1fr; gap:14mm; margin-top:5mm; text-align:center; font-size:6.5pt; color:#475569; }
+.rp-signs div{ border-top:1px solid #64748b; padding-top:.6mm; }
+.rp-foot{ font-size:5.5pt; color:#94a3b8; text-align:center; margin-top:1.5mm; }
+
+/* --- TEORÍA COMPLETA con LETRA AMPLIADA -------------------------
+   Objetivo: EXACTAMENTE 3 MÓDULOS POR HOJA A4.
+   · Fuente grande y legible (9pt base / 9.5pt en papel).
+   · 2 columnas por módulo para aprovechar el ancho.
+   · La clase .th-pagebreak (aplicada por JS cada 3 módulos) fuerza
+     el salto de página SOLO al imprimir. */
+.th-mod{ padding:2mm 2.5mm; margin-bottom:3mm; }
+.th-mod h4{ font-size:10pt; font-weight:800; margin:0 0 1.2mm; padding-left:2mm; border-left:3.5px solid var(--c,#3b82f6); text-transform:uppercase; letter-spacing:.01em; }
+.th-body{ columns:2; column-gap:5mm; font-size:9pt; line-height:1.4; }
+.th-body p{ margin:0 0 1.4mm; break-inside:avoid; page-break-inside:avoid; }
+.th-body b.lbl{ color:#0f172a; }
+.th-body .ex{ color:#334155; }
+
+/* ============================================================
+   HOJA DE IMPRESIÓN A4
+   (body.print-report → reporte | body.print-theory → teoría)
+   ============================================================ */
+@media print{
+  @page{ size:A4; margin:7mm; }
+  *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+  html,body{ background:#fff !important; }
+  body::before, body::after{ display:none !important; }
+  body *{ visibility:hidden !important; }
+  #reportWrap, #theoryWrap{ position:static !important; display:block !important; background:#fff !important; padding:0 !important; overflow:visible !important; backdrop-filter:none !important; }
+  #theoryWrap > div{ max-width:none !important; margin:0 !important; }
+  body.print-report #printArea, body.print-report #printArea *,
+  body.print-theory #theoryArea, body.print-theory #theoryArea *{ visibility:visible !important; }
+  #printArea, #theoryArea{
+    position:absolute !important; left:0; top:0; width:100%;
+    max-width:none !important; margin:0 !important; padding:0 !important;
+    border-radius:0 !important; box-shadow:none !important; border:none !important;
+  }
+  .no-print{ display:none !important; }
+
+  /* --- TEORÍA: letra ampliada + salto de hoja cada 3 módulos --- */
+  .th-head b{ font-size:11pt; }
+  .th-head span{ font-size:7.5pt; }
+  .th-mod h4{ font-size:11pt; margin-bottom:1.5mm; }
+  .th-body{ font-size:9.5pt; line-height:1.42; column-gap:6mm; }
+  .th-body p{ margin-bottom:1.6mm; }
+  .th-mod{ padding:2.5mm 3mm; margin-bottom:4mm; border-width:.75pt; }
+  .th-pagebreak{ break-after:page; page-break-after:always; }
+
+  /* --- REPORTE: se mantiene ultra-compacto --- */
+  .rp-head b{ font-size:9pt; }
+  .rp-fields input{ font-size:7pt; }
+  .rp-mod-b{ font-size:6.9pt; line-height:1.18; }
+  .rp-mod-h{ font-size:6.6pt; padding:.4mm 1.5mm; }
+  .rp-mod{ margin-bottom:.9mm; border-width:.5pt; }
+  .rp-signs{ margin-top:3.5mm; }
+  #toastBox, .confetti-piece{ display:none !important; }
+}
+</style>
+</head>
+
+<body class="min-h-screen text-slate-100 font-sans">
+
+<!-- ============================================================
+     ENCABEZADO HUD: identidad, nivel, XP y progreso general.
+     ============================================================ -->
+<header class="sticky top-0 z-40 backdrop-blur-md bg-slate-950/80 border-b border-slate-800/80 no-print">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3">
+    <div class="flex items-center gap-3">
+      <svg width="46" height="46" viewBox="0 0 60 60" class="floaty-slow shrink-0">
+        <polygon points="30,6 52,18 52,42 30,54 8,42 8,18" fill="url(#lgLogo)" stroke="#38bdf8" stroke-width="1.5"/>
+        <polygon points="30,14 45,22.5 45,39 30,47.5 15,39 15,22.5" fill="#0f172a" opacity=".8"/>
+        <text x="30" y="37" text-anchor="middle" font-size="17">🌐</text>
+        <defs><linearGradient id="lgLogo" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#8b5cf6"/>
+        </linearGradient></defs>
+      </svg>
+      <div class="leading-tight">
+        <h1 class="font-display font-extrabold text-lg sm:text-xl bg-gradient-to-r from-sky-400 via-violet-400 to-menta bg-clip-text text-transparent">TecnoRed · NTiCx</h1>
+        <p class="text-[.68rem] text-slate-400 -mt-0.5">4to año · Secundaria · Argentina 🇦🇷</p>
+      </div>
+    </div>
+
+    <div class="ml-auto flex items-center gap-3 flex-wrap">
+      <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-full px-3 py-1.5">
+        <span id="hudLevelIcon" class="text-xl">🐣</span>
+        <div class="leading-tight">
+          <p class="text-[.6rem] uppercase tracking-wider text-slate-400">Nivel</p>
+          <p id="hudLevelName" class="text-xs font-display font-bold text-sky-300">Novato digital</p>
+        </div>
+      </div>
+      <div class="min-w-[140px]">
+        <div class="flex justify-between text-[.62rem] text-slate-400 mb-1">
+          <span><i class="fa-solid fa-bolt text-neon"></i> XP</span><span id="xpText">0</span>
+        </div>
+        <div class="h-2.5 bg-slate-800 rounded-full overflow-hidden">
+          <div id="xpBar" class="h-full w-0 rounded-full bg-gradient-to-r from-electrico via-violetax to-menta transition-all duration-700"></div>
+        </div>
+      </div>
+      <div class="min-w-[120px]">
+        <div class="flex justify-between text-[.62rem] text-slate-400 mb-1">
+          <span><i class="fa-solid fa-route text-menta"></i> Módulos</span><span id="globalText">0%</span>
+        </div>
+        <div class="h-2.5 bg-slate-800 rounded-full overflow-hidden">
+          <div id="globalBar" class="h-full w-0 rounded-full bg-gradient-to-r from-neon to-yellow-400 transition-all duration-700"></div>
+        </div>
+      </div>
+      <button onclick="openTheory()" class="bg-gradient-to-r from-electrico to-violetax hover:brightness-110 active:scale-95 transition text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg shadow-violet-900/40">
+        <i class="fa-solid fa-book mr-1"></i> Teoría
+      </button>
+      <button onclick="openReport()" class="bg-gradient-to-r from-neon to-orange-500 hover:brightness-110 active:scale-95 transition text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg shadow-orange-900/40">
+        <i class="fa-solid fa-file-arrow-down mr-1"></i> Mi reporte
+      </button>
+    </div>
+  </div>
+
+  <!-- NAVEGACIÓN POR PESTAÑAS (nombres exigidos por la consigna) -->
+  <nav class="max-w-7xl mx-auto px-2 pb-2 overflow-x-auto no-scrollbar">
+    <div class="flex gap-1.5 min-w-max">
+      <button class="tab-btn" data-tab="inicio"><i class="fa-solid fa-house mr-1"></i>Inicio</button>
+      <button class="tab-btn" data-tab="redes"><i class="fa-solid fa-network-wired mr-1"></i>Redes Informáticas</button>
+      <button class="tab-btn" data-tab="info"><i class="fa-solid fa-wave-square mr-1"></i>Info Analógica vs Digital</button>
+      <button class="tab-btn" data-tab="arq"><i class="fa-solid fa-map-location-dot mr-1"></i>Arquitecturas de Red</button>
+      <button class="tab-btn" data-tab="datos"><i class="fa-solid fa-box-open mr-1"></i>Redes de Datos</button>
+      <button class="tab-btn" data-tab="tel"><i class="fa-solid fa-phone mr-1"></i>Red Telefónica</button>
+      <button class="tab-btn" data-tab="sat"><i class="fa-solid fa-satellite mr-1"></i>Red Satelital</button>
+    </div>
+  </nav>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 py-6 no-print">
+
+  <!-- ============ PESTAÑA 1 · INICIO — Dashboard gamificado ============ -->
+  <section id="tab-inicio" class="tab-content hidden">
+    <div class="grid lg:grid-cols-5 gap-6 items-stretch">
+      <div class="lg:col-span-3 iso-card p-6 sm:p-8 relative overflow-hidden anim-fade">
+        <span class="absolute top-4 right-4 text-[.65rem] font-bold uppercase tracking-widest bg-menta/15 text-menta border border-menta/40 rounded-full px-3 py-1">Misión Conexión</span>
+        <h2 class="font-display text-2xl sm:text-3xl font-extrabold leading-tight">
+          ¡Hola, futuro/a <span class="text-neon">Conector Master</span>! 👋
+        </h2>
+        <p class="text-slate-300 mt-2 text-sm sm:text-base">
+          Bienvenido/a a <b>TecnoRed</b>, la app de <b>NTiCx</b> para 4to año. Vas a explorar cómo se conectan
+          las compus, los celus, los satélites y hasta las ciudades enteras. Cada módulo tiene
+          <span class="text-sky-300 font-semibold">tarjetas interactivas</span>, un
+          <span class="text-violet-300 font-semibold">simulador</span> y una
+          <span class="text-menta font-semibold">trivia de 3 preguntas</span>. Sumá XP, desbloqueá insignias,
+          imprimí la <b>teoría completa (3 módulos por hoja A4)</b> y al final generá tu <b>reporte evaluativo</b>. 🚀
+        </p>
+        <div class="flex flex-wrap gap-2 mt-4">
+          <button onclick="showTab('redes')" class="bg-gradient-to-r from-electrico to-violetax hover:brightness-110 active:scale-95 transition text-white text-sm font-bold px-5 py-2.5 rounded-full shadow-lg shadow-blue-900/50">
+            <i class="fa-solid fa-play mr-1"></i> Empezar la misión
+          </button>
+          <button onclick="openTheory()" class="border border-sky-500/60 text-sky-300 hover:bg-sky-500/10 transition text-sm font-bold px-5 py-2.5 rounded-full">
+            <i class="fa-solid fa-book mr-1"></i> Imprimir teoría (elegí módulos)
+          </button>
+          <button onclick="openReport()" class="border border-slate-600 hover:border-neon hover:text-neon transition text-sm font-bold px-5 py-2.5 rounded-full text-slate-300">
+            <i class="fa-solid fa-print mr-1"></i> Generar Certificado / Reporte
+          </button>
+        </div>
+        <div id="heroSvgWrap" class="mt-6 rounded-2xl bg-slate-950/60 border border-slate-800 p-2"></div>
+      </div>
+
+      <div class="lg:col-span-2 flex flex-col gap-6">
+        <div class="iso-card p-6 anim-fade text-center">
+          <h3 class="font-display font-bold text-slate-200 mb-3"><i class="fa-solid fa-chart-pie text-sky-400 mr-1"></i> Tu progreso</h3>
+          <svg width="150" height="150" viewBox="0 0 120 120" class="mx-auto -rotate-90">
+            <circle cx="60" cy="60" r="52" fill="none" stroke="#1e293b" stroke-width="11"/>
+            <circle id="dashRing" cx="60" cy="60" r="52" fill="none" stroke="url(#gRing)" stroke-width="11" stroke-linecap="round"
+                    stroke-dasharray="327" stroke-dashoffset="327" style="transition:stroke-dashoffset .8s ease"/>
+            <defs><linearGradient id="gRing" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#38bdf8"/><stop offset=".5" stop-color="#8b5cf6"/><stop offset="1" stop-color="#34d399"/>
+            </linearGradient></defs>
+          </svg>
+          <p id="dashRingText" class="font-display text-3xl font-extrabold text-white -mt-24 mb-16">0%</p>
+          <div class="grid grid-cols-2 gap-3 text-left mt-4">
+            <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3">
+              <p class="text-[.62rem] uppercase text-slate-400">Nivel actual</p>
+              <p id="dashLevel" class="font-display font-bold text-sky-300 text-sm">🐣 Novato digital</p>
+            </div>
+            <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3">
+              <p class="text-[.62rem] uppercase text-slate-400">XP acumulado</p>
+              <p id="dashXp" class="font-display font-bold text-neon text-sm">⚡ 0 pts</p>
+            </div>
+          </div>
+        </div>
+        <div class="iso-card p-6 anim-fade flex-1">
+          <h3 class="font-display font-bold text-slate-200 mb-3"><i class="fa-solid fa-medal text-yellow-400 mr-1"></i> Insignias <span id="badgeCount" class="text-xs text-slate-400 font-normal">(0/4)</span></h3>
+          <div id="dashBadges" class="grid grid-cols-2 gap-3"></div>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="font-display text-xl font-extrabold mt-8 mb-3"><i class="fa-solid fa-map text-menta mr-2"></i>Mapa de módulos</h3>
+    <div id="dashModules" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  </section>
+
+  <!-- ============ PESTAÑA 2 · REDES INFORMÁTICAS ============ -->
+  <section id="tab-redes" class="tab-content hidden">
+    <div class="module-header" data-emoji="🖧" data-title="Redes Informáticas" data-sub="¿Qué pasa cuando conectás dispositivos entre sí?" data-color="#3b82f6"></div>
+
+    <div class="grid md:grid-cols-3 gap-4 mt-6">
+      <div class="iso-card p-5 anim-fade">
+        <div class="text-3xl mb-2">🧩</div>
+        <h4 class="font-display font-bold text-sky-300">¿Qué es una red?</h4>
+        <p class="text-sm text-slate-300 mt-1">Dos o más dispositivos conectados que comparten información y recursos. Tu casa, tu escuela y hasta los juegos online funcionan en red.</p>
+        <button class="btn-more mt-3 text-xs font-bold text-neon hover:underline">Ver más <i class="fa-solid fa-chevron-down"></i></button>
+        <div class="more hidden mt-2 text-xs text-slate-400 border-l-2 border-neon pl-3">Los dispositivos conectados se llaman <b>nodos</b> y las conexiones, <b>enlaces</b>. El enlace puede ser un cable (cobre o fibra óptica) o inalámbrico (Wi-Fi, Bluetooth).</div>
+      </div>
+      <div class="iso-card p-5 anim-fade">
+        <div class="text-3xl mb-2">🛠️</div>
+        <h4 class="font-display font-bold text-violet-300">Componentes clave</h4>
+        <p class="text-sm text-slate-300 mt-1">Emisores y receptores (celus, compus, servidores), medios de transmisión y equipos intermedios como el router y el switch.</p>
+        <button class="btn-more mt-3 text-xs font-bold text-neon hover:underline">Ver más <i class="fa-solid fa-chevron-down"></i></button>
+        <div class="more hidden mt-2 text-xs text-slate-400 border-l-2 border-neon pl-3">El <b>switch</b> conecta dispositivos <i>dentro</i> de una misma red y el <b>router</b> conecta redes <i>distintas</i> entre sí (por ejemplo, tu red con Internet). Todo se coordina con <b>protocolos</b>.</div>
+      </div>
+      <div class="iso-card p-5 anim-fade">
+        <div class="text-3xl mb-2">🎯</div>
+        <h4 class="font-display font-bold text-menta">¿Para qué sirve?</h4>
+        <p class="text-sm text-slate-300 mt-1">Compartir archivos e impresoras, comunicarse, jugar online, ver streaming, usar el aula virtual… ¡casi todo lo digital necesita una red!</p>
+        <button class="btn-more mt-3 text-xs font-bold text-neon hover:underline">Ver más <i class="fa-solid fa-chevron-down"></i></button>
+        <div class="more hidden mt-2 text-xs text-slate-400 border-l-2 border-neon pl-3">La gran ventaja es el <b>ahorro y la colaboración</b>: muchos usuarios comparten los mismos recursos (una sola impresora, una sola conexión a Internet, carpetas comunes).</div>
+      </div>
+    </div>
+
+    <!-- Diagrama dinámico: red isométrica interactiva -->
+    <div class="iso-card p-5 sm:p-6 mt-6 anim-fade">
+      <h3 class="font-display font-bold text-lg"><i class="fa-solid fa-diagram-project text-sky-400 mr-2"></i>Diagrama vivo: explorá una red real</h3>
+      <p class="text-xs text-slate-400 mb-3">👆 Hacé clic (o pasá el mouse) por cada dispositivo del diagrama isométrico para descubrir su función. ¡Explorá al menos 4 nodos para ganar XP!</p>
+      <div class="grid lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2 bg-slate-950/70 border border-slate-800 rounded-2xl p-2 overflow-hidden">
+          <svg id="netSvg" viewBox="0 0 640 380" class="w-full h-auto"></svg>
+        </div>
+        <div id="netInfo" class="bg-slate-950/70 border border-slate-800 rounded-2xl p-5 flex flex-col justify-center text-center">
+          <div id="netInfoEmoji" class="text-5xl mb-2">🔍</div>
+          <h4 id="netInfoTitle" class="font-display font-bold text-sky-300">Tocá un nodo…</h4>
+          <p id="netInfoText" class="text-sm text-slate-300 mt-2">Cada equipo cumple un rol distinto dentro de la red. Descubrí quién es quién.</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="quiz-redes" class="mt-8"></div>
+    <div class="module-nav" data-next="info"></div>
+  </section>
+
+  <!-- ============ PESTAÑA 3 · INFO ANALÓGICA VS DIGITAL ============ -->
+  <section id="tab-info" class="tab-content hidden">
+    <div class="module-header" data-emoji="〰️" data-title="Info Analógica vs Digital" data-sub="De la onda continua… al mundo de los bits" data-color="#8b5cf6"></div>
+
+    <div class="grid md:grid-cols-4 gap-4 mt-6">
+      <div class="iso-card p-5 anim-fade">
+        <div class="text-3xl mb-2">🎙️</div>
+        <h4 class="font-display font-bold text-sky-300">Señal analógica</h4>
+        <p class="text-sm text-slate-300 mt-1">Varía de forma <b>continua</b>, como tu voz, la temperatura o la aguja de un reloj. Entre dos valores hay infinitos valores intermedios.</p>
+      </div>
+      <div class="iso-card p-5 anim-fade">
+        <div class="text-3xl mb-2">💾</div>
+        <h4 class="font-display font-bold text-violet-300">Señal digital</h4>
+        <p class="text-sm text-slate-300 mt-1">Usa valores <b>discretos</b>: el famoso <code class="text-menta">0</code> y <code class="text-menta">1</code>. La unidad mínima es el <b>bit</b>; con 8 bits formás un <b>byte</b>.</p>
+      </div>
+      <div class="iso-card p-5 anim-fade">
+        <div class="text-3xl mb-2">✂️</div>
+        <h4 class="font-display font-bold text-menta">Conversión (muestreo)</h4>
+        <p class="text-sm text-slate-300 mt-1">Para digitalizar, se <b>mide</b> la onda cada cierto tiempo (muestreo) y cada medida se convierte en un número binario. Así se graba la música en tu celu.</p>
+      </div>
+      <div class="iso-card p-5 anim-fade">
+        <div class="text-3xl mb-2">🛡️</div>
+        <h4 class="font-display font-bold text-neon">Ventaja digital</h4>
+        <p class="text-sm text-slate-300 mt-1">Resiste mejor el <b>ruido</b>: como solo hay dos estados, los equipos pueden <b>regenerar</b> la señal sin perder calidad. La analógica se degrada en cada copia.</p>
+      </div>
+    </div>
+
+    <!-- Simulador: conversor visual de onda analógica a bits -->
+    <div class="iso-card p-5 sm:p-6 mt-6 anim-fade">
+      <h3 class="font-display font-bold text-lg"><i class="fa-solid fa-wave-square text-violet-400 mr-2"></i>Simulador: conversor analógico → digital</h3>
+      <p class="text-xs text-slate-400 mb-3">🎛️ Mové los controles para cambiar la onda y presioná <b>“Muestrear y digitalizar”</b>: vas a ver cómo la onda continua se transforma en números binarios.</p>
+      <div class="grid lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2">
+          <canvas id="adCanvas" width="720" height="300" class="w-full rounded-2xl bg-slate-950 border border-slate-800"></canvas>
+          <div class="flex flex-wrap gap-4 mt-3 text-xs">
+            <label class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2">🌊 Frecuencia
+              <input id="adFreq" type="range" min="1" max="5" step="0.5" value="2" class="accent-sky-400 w-28">
+            </label>
+            <label class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2">📏 Amplitud
+              <input id="adAmp" type="range" min="15" max="95" value="70" class="accent-violet-400 w-28">
+            </label>
+            <label class="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2">🎯 Muestras
+              <input id="adSamples" type="range" min="4" max="14" value="8" class="accent-emerald-400 w-24">
+              <span id="adSamplesN" class="text-menta font-bold">8</span>
+            </label>
+            <button id="btnSample" class="bg-gradient-to-r from-violetax to-electrico hover:brightness-110 active:scale-95 transition text-white font-bold px-4 py-2 rounded-xl shadow-lg shadow-violet-900/40">
+              <i class="fa-solid fa-scissors mr-1"></i> Muestrear y digitalizar
+            </button>
+          </div>
+        </div>
+        <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-4">
+          <h4 class="font-display font-bold text-menta text-sm mb-2"><i class="fa-solid fa-memory mr-1"></i> Salida en bits</h4>
+          <div id="adBits" class="font-mono text-sm text-menta leading-7 min-h-[120px]">Presioná “Muestrear” para generar los bits…</div>
+          <p id="adMsg" class="text-xs text-slate-400 mt-3 border-t border-slate-800 pt-2">💡 Cada muestra se convierte en un número de 4 bits. Cuantas más muestras, más fiel es la copia digital de la onda original.</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="quiz-info" class="mt-8"></div>
+    <div class="module-nav" data-next="arq"></div>
+  </section>
+
+  <!-- ============ PESTAÑA 4 · ARQUITECTURAS DE RED ============ -->
+  <section id="tab-arq" class="tab-content hidden">
+    <div class="module-header" data-emoji="🗺️" data-title="Arquitecturas de Red" data-sub="PAN · LAN · MAN · WAN: del reloj inteligente al planeta entero" data-color="#34d399"></div>
+
+    <div class="grid md:grid-cols-4 gap-4 mt-6">
+      <div class="iso-card p-5 anim-fade border-t-4 !border-t-sky-400">
+        <div class="text-3xl mb-2">⌚</div>
+        <h4 class="font-display font-bold text-sky-300">PAN <span class="text-[.6rem] text-slate-400 font-normal">Personal Area Network</span></h4>
+        <p class="text-sm text-slate-300 mt-1">Alcance <b>personal</b>: hasta ~10 metros. Conecta tus dispositivos “cuerpo a cuerpo”.</p>
+        <p class="text-xs text-slate-400 mt-2">🔹 Bluetooth (auriculares ↔ celu)<br>🔹 Smartwatch ↔ celular<br>🔹 Transferencia por Wi-Fi Direct</p>
+      </div>
+      <div class="iso-card p-5 anim-fade border-t-4 !border-t-violet-400">
+        <div class="text-3xl mb-2">🏫</div>
+        <h4 class="font-display font-bold text-violet-300">LAN <span class="text-[.6rem] text-slate-400 font-normal">Local Area Network</span></h4>
+        <p class="text-sm text-slate-300 mt-1">Alcance <b>local</b>: un aula, casa o edificio (hasta ~1 km). Alta velocidad.</p>
+        <p class="text-xs text-slate-400 mt-2">🔹 Sala de informática de la escuela<br>🔹 Red Wi-Fi de tu casa<br>🔹 Comparte impresoras y archivos</p>
+      </div>
+      <div class="iso-card p-5 anim-fade border-t-4 !border-t-menta">
+        <div class="text-3xl mb-2">🏙️</div>
+        <h4 class="font-display font-bold text-menta">MAN <span class="text-[.6rem] text-slate-400 font-normal">Metropolitan Area Network</span></h4>
+        <p class="text-sm text-slate-300 mt-1">Alcance de <b>ciudad</b>: conecta edificios o sedes a varios kilómetros.</p>
+        <p class="text-xs text-slate-400 mt-2">🔹 Sedes de un banco en la ciudad<br>🔹 Red de fibra del municipio<br>🔹 Campus universitario grande</p>
+      </div>
+      <div class="iso-card p-5 anim-fade border-t-4 !border-t-neon">
+        <div class="text-3xl mb-2">🌍</div>
+        <h4 class="font-display font-bold text-neon">WAN <span class="text-[.6rem] text-slate-400 font-normal">Wide Area Network</span></h4>
+        <p class="text-sm text-slate-300 mt-1">Alcance <b>amplio</b>: países y continentes. ¡Internet es la WAN más grande!</p>
+        <p class="text-xs text-slate-400 mt-2">🔹 Videollamada Argentina ↔ España<br>🔹 Servicios en la nube<br>🔹 Juegos online mundiales</p>
+      </div>
+    </div>
+
+    <!-- Simulador: clasificar escenarios arrastrando (o tocando) -->
+    <div class="iso-card p-5 sm:p-6 mt-6 anim-fade">
+      <h3 class="font-display font-bold text-lg"><i class="fa-solid fa-map-location-dot text-menta mr-2"></i>Simulador: ¡clasificá cada caso en su red!</h3>
+      <p class="text-xs text-slate-400 mb-3">🖱️ <b>Arrastrá</b> las fichas a la zona correcta (PAN / LAN / MAN / WAN). ¿Desde el celu? <b>Tocá</b> la ficha y después tocá la zona. Progreso: <span id="arqCount" class="text-menta font-bold">0/8</span></p>
+      <div id="arqPool" class="flex flex-wrap gap-2 mb-4 min-h-[46px] bg-slate-950/60 border border-dashed border-slate-700 rounded-2xl p-3"></div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="zone-box bg-slate-950/60 border-2 border-dashed border-slate-700 rounded-2xl p-3 transition" data-zone="pan">
+          <h5 class="font-display font-bold text-sky-300 text-sm mb-1">⌚ PAN <span class="text-[.6rem] text-slate-500 font-normal">~10 m · personal</span></h5>
+          <div class="zone-items flex flex-wrap gap-2 min-h-[44px]"></div>
+        </div>
+        <div class="zone-box bg-slate-950/60 border-2 border-dashed border-slate-700 rounded-2xl p-3 transition" data-zone="lan">
+          <h5 class="font-display font-bold text-violet-300 text-sm mb-1">🏫 LAN <span class="text-[.6rem] text-slate-500 font-normal">edificio · local</span></h5>
+          <div class="zone-items flex flex-wrap gap-2 min-h-[44px]"></div>
+        </div>
+        <div class="zone-box bg-slate-950/60 border-2 border-dashed border-slate-700 rounded-2xl p-3 transition" data-zone="man">
+          <h5 class="font-display font-bold text-menta text-sm mb-1">🏙️ MAN <span class="text-[.6rem] text-slate-500 font-normal">ciudad</span></h5>
+          <div class="zone-items flex flex-wrap gap-2 min-h-[44px]"></div>
+        </div>
+        <div class="zone-box bg-slate-950/60 border-2 border-dashed border-slate-700 rounded-2xl p-3 transition" data-zone="wan">
+          <h5 class="font-display font-bold text-neon text-sm mb-1">🌍 WAN <span class="text-[.6rem] text-slate-500 font-normal">países · mundo</span></h5>
+          <div class="zone-items flex flex-wrap gap-2 min-h-[44px]"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="quiz-arq" class="mt-8"></div>
+    <div class="module-nav" data-next="datos"></div>
+  </section>
+
+  <!-- ============ PESTAÑA 5 · REDES DE DATOS ============ -->
+  <section id="tab-datos" class="tab-content hidden">
+    <div class="module-header" data-emoji="📦" data-title="Redes de Datos" data-sub="Tu mensaje viaja en paquetitos por todo el planeta" data-color="#fb7a1e"></div>
+
+    <div class="grid md:grid-cols-3 gap-4 mt-6">
+      <div class="iso-card p-5 anim-fade">
+        <div class="text-3xl mb-2">📦</div>
+        <h4 class="font-display font-bold text-neon">Conmutación de paquetes</h4>
+        <p class="text-sm text-slate-300 mt-1">Los mensajes se <b>dividen en paquetes</b> numerados. Cada paquete puede viajar por una ruta distinta y, al llegar, se <b>reensamblan</b> en orden.</p>
+        <button class="btn-more mt-3 text-xs font-bold text-neon hover:underline">Ver más <i class="fa-solid fa-chevron-down"></i></button>
+        <div class="more hidden mt-2 text-xs text-slate-400 border-l-2 border-neon pl-3">Es como mandar una carta enorme en varios sobres numerados: si un sobre se pierde, solo se reenvía ese. ¡Eficiente y resistente a fallas!</div>
+      </div>
+      <div class="iso-card p-5 anim-fade">
+        <div class="text-3xl mb-2">🤝</div>
+        <h4 class="font-display font-bold text-sky-300">Protocolos TCP/IP</h4>
+        <p class="text-sm text-slate-300 mt-1">Son las <b>reglas del idioma</b> que hablan los dispositivos: cómo se pide, se envía, se direcciona y se recibe la información.</p>
+        <button class="btn-more mt-3 text-xs font-bold text-neon hover:underline">Ver más <i class="fa-solid fa-chevron-down"></i></button>
+        <div class="more hidden mt-2 text-xs text-slate-400 border-l-2 border-neon pl-3"><b>IP</b> se ocupa del “domicilio” (dirección IP) y del envío; <b>TCP</b> verifica que todo llegue completo y en orden, y pide reenvíos si falta algo.</div>
+      </div>
+      <div class="iso-card p-5 anim-fade">
+        <div class="text-3xl mb-2">🧭</div>
+        <h4 class="font-display font-bold text-violet-300">Direcciones y rutas</h4>
+        <p class="text-sm text-slate-300 mt-1">La <b>dirección IP</b> identifica a cada dispositivo (como un DNI postal) y los <b>routers</b> eligen el mejor camino para cada paquete.</p>
+        <button class="btn-more mt-3 text-xs font-bold text-neon hover:underline">Ver más <i class="fa-solid fa-chevron-down"></i></button>
+        <div class="more hidden mt-2 text-xs text-slate-400 border-l-2 border-neon pl-3">Ejemplos: <code>192.168.0.15</code> (IP privada, dentro de tu red) y <code>8.8.8.8</code> (IP pública, en Internet). El <b>DNS</b> traduce nombres como “youtube.com” a números IP.</div>
+      </div>
+    </div>
+
+    <!-- Simulador: envío de paquetes -->
+    <div class="iso-card p-5 sm:p-6 mt-6 anim-fade">
+      <h3 class="font-display font-bold text-lg"><i class="fa-solid fa-truck-fast text-neon mr-2"></i>Simulador: enviá tu mensaje en paquetes</h3>
+      <p class="text-xs text-slate-400 mb-3">✍️ Escribí un mensaje, mirá cómo se divide en paquetes numerados, cómo atraviesa los routers y cómo se reensambla en el servidor.</p>
+      <div class="flex flex-wrap gap-2 mb-4">
+        <input id="pktInput" maxlength="66" value="¡Hola profe, la red funciona!" placeholder="Escribí tu mensaje…"
+               class="flex-1 min-w-[200px] bg-slate-950 border border-slate-700 focus:border-sky-400 outline-none rounded-xl px-4 py-2.5 text-sm">
+        <button id="btnSend" class="bg-gradient-to-r from-neon to-orange-500 hover:brightness-110 active:scale-95 transition text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-orange-900/40">
+          <i class="fa-solid fa-paper-plane mr-1"></i> Dividir y enviar
+        </button>
+      </div>
+      <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-4">
+        <div class="flex items-center justify-between text-[.65rem] uppercase tracking-wider text-slate-500 mb-1">
+          <span>💻 Emisor · 192.168.0.15</span><span>Destino · 172.217.30.14</span>
+        </div>
+        <div id="pktTrack" class="relative h-36 rounded-xl bg-gradient-to-r from-electrico/10 via-violetax/10 to-menta/10 border border-slate-800 overflow-hidden">
+          <div class="absolute inset-y-0 left-0 flex items-center text-4xl pl-3">💻</div>
+          <div class="absolute inset-y-0 flex items-center text-3xl" style="left:26%">📡</div>
+          <div class="absolute inset-y-0 flex items-center text-3xl" style="left:49%">📡</div>
+          <div class="absolute inset-y-0 flex items-center text-3xl" style="left:72%">📡</div>
+          <div class="absolute inset-y-0 right-0 flex items-center text-4xl pr-3">🖥️</div>
+          <div class="absolute left-12 right-12 top-1/2 h-0.5 bg-slate-700/70"></div>
+        </div>
+        <div class="mt-3">
+          <p class="text-xs text-slate-400 mb-1"><i class="fa-solid fa-boxes-stacked text-menta mr-1"></i>Reensamblado en destino:</p>
+          <div id="pktOut" class="min-h-[34px] bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono text-sm text-menta"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="quiz-datos" class="mt-8"></div>
+    <div class="module-nav" data-next="tel"></div>
+  </section>
+
+  <!-- ============ PESTAÑA 6 · RED TELEFÓNICA ============ -->
+  <section id="tab-tel" class="tab-content hidden">
+    <div class="module-header" data-emoji="📞" data-title="Red Telefónica" data-sub="De la operadora manual al 5G: 150 años de evolución" data-color="#38bdf8"></div>
+
+    <div class="grid md:grid-cols-3 gap-4 mt-6">
+      <div class="iso-card p-5 anim-fade">
+        <div class="text-3xl mb-2">🗣️</div>
+        <h4 class="font-display font-bold text-sky-300">¿Cómo viaja la voz?</h4>
+        <p class="text-sm text-slate-300 mt-1">El micrófono convierte tu voz (onda sonora <b>analógica</b>) en <b>señal eléctrica</b> que viaja por la red hasta el auricular del otro lado.</p>
+      </div>
+      <div class="iso-card p-5 anim-fade">
+        <div class="text-3xl mb-2">🔀</div>
+        <h4 class="font-display font-bold text-violet-300">Conmutación de circuitos</h4>
+        <p class="text-sm text-slate-300 mt-1">En la red clásica, al llamar se armaba un <b>canal dedicado</b> entre los dos teléfonos que duraba toda la conversación.</p>
+        <button class="btn-more mt-3 text-xs font-bold text-neon hover:underline">Ver más <i class="fa-solid fa-chevron-down"></i></button>
+        <div class="more hidden mt-2 text-xs text-slate-400 border-l-2 border-neon pl-3">Hoy, con <b>VoIP</b> (voz por IP), la llamada viaja en <b>paquetes</b> por la misma red que Internet: por eso podés llamar por WhatsApp usando datos.</div>
+      </div>
+      <div class="iso-card p-5 anim-fade">
+        <div class="text-3xl mb-2">🗼</div>
+        <h4 class="font-display font-bold text-menta">Red móvil: celdas</h4>
+        <p class="text-sm text-slate-300 mt-1">El territorio se divide en <b>celdas</b> con una antena en cada una. Tu celu se conecta a la más cercana y la llamada “salta” de celda en celda sin cortarse.</p>
+      </div>
+    </div>
+
+    <!-- Diagrama dinámico: línea de tiempo interactiva -->
+    <div class="iso-card p-5 sm:p-6 mt-6 anim-fade">
+      <h3 class="font-display font-bold text-lg"><i class="fa-solid fa-timeline text-sky-400 mr-2"></i>Línea de tiempo interactiva</h3>
+      <p class="text-xs text-slate-400 mb-3">🕰️ Desplazá la línea y hacé clic en cada hito para ver el detalle. ¡Explorá al menos 4 épocas para ganar XP!</p>
+      <div id="telCards" class="flex gap-3 overflow-x-auto pb-3 no-scrollbar"></div>
+      <div id="telDetail" class="mt-3 bg-slate-950/70 border border-slate-800 rounded-2xl p-5">
+        <p class="text-sm text-slate-400 text-center"><i class="fa-solid fa-hand-pointer mr-1 text-neon"></i> Elegí una época de la línea de tiempo…</p>
+      </div>
+    </div>
+
+    <div id="quiz-tel" class="mt-8"></div>
+    <div class="module-nav" data-next="sat"></div>
+  </section>
+
+  <!-- ============ PESTAÑA 7 · RED SATELITAL ============ -->
+  <section id="tab-sat" class="tab-content hidden">
+    <div class="module-header" data-emoji="🛰️" data-title="Red Satelital" data-sub="Repetidores en órbita: GPS, TV e Internet desde el espacio" data-color="#8b5cf6"></div>
+
+    <div class="grid md:grid-cols-3 gap-4 mt-6">
+      <div class="iso-card p-5 anim-fade">
+        <div class="text-3xl mb-2">📡</div>
+        <h4 class="font-display font-bold text-violet-300">¿Qué es?</h4>
+        <p class="text-sm text-slate-300 mt-1">Un satélite de comunicaciones es un <b>repetidor espacial</b>: recibe señales de una estación terrena, las amplifica y las reenvía a otra zona del planeta.</p>
+      </div>
+      <div class="iso-card p-5 anim-fade">
+        <div class="text-3xl mb-2">🌐</div>
+        <h4 class="font-display font-bold text-sky-300">Aplicaciones</h4>
+        <p class="text-sm text-slate-300 mt-1">📺 TV satelital · 🧭 GPS y mapas · 🌦️ Meteorología · 🛜 Internet en zonas rurales (¡muy útil en nuestro país!) · 📸 Observación de la Tierra.</p>
+      </div>
+      <div class="iso-card p-5 anim-fade">
+        <div class="text-3xl mb-2">⏱️</div>
+        <h4 class="font-display font-bold text-menta">Latencia</h4>
+        <p class="text-sm text-slate-300 mt-1">Es el <b>retardo</b> de la señal. Cuanto más lejos está el satélite, más tarda: GEO ≈ 600 ms, LEO ≈ 20-50 ms. Por eso Starlink usa órbita baja.</p>
+      </div>
+    </div>
+
+    <!-- Simulador: órbitas animadas -->
+    <div class="iso-card p-5 sm:p-6 mt-6 anim-fade">
+      <h3 class="font-display font-bold text-lg"><i class="fa-solid fa-satellite text-violet-400 mr-2"></i>Simulador orbital: LEO · MEO · GEO</h3>
+      <p class="text-xs text-slate-400 mb-3">🔭 Tocá cada órbita (o los botones) para ver sus características. ¡Explorá las tres para ganar XP! Notá cómo cambia la velocidad del satélite.</p>
+      <div class="grid lg:grid-cols-2 gap-5 items-center">
+        <div class="bg-slate-950/70 border border-slate-800 rounded-2xl p-2 mx-auto w-full max-w-[420px]">
+          <svg id="satSvg" viewBox="0 0 420 420" class="w-full h-auto"></svg>
+        </div>
+        <div>
+          <div class="flex gap-2 mb-3 flex-wrap">
+            <button class="sat-btn bg-slate-900 border border-slate-700 hover:border-sky-400 transition text-xs font-bold px-4 py-2 rounded-full" data-orb="leo">🛰️ LEO</button>
+            <button class="sat-btn bg-slate-900 border border-slate-700 hover:border-violet-400 transition text-xs font-bold px-4 py-2 rounded-full" data-orb="meo">🧭 MEO</button>
+            <button class="sat-btn bg-slate-900 border border-slate-700 hover:border-menta transition text-xs font-bold px-4 py-2 rounded-full" data-orb="geo">📺 GEO</button>
+          </div>
+          <div id="satInfo" class="bg-slate-950/70 border border-slate-800 rounded-2xl p-5">
+            <p class="text-sm text-slate-400 text-center"><i class="fa-solid fa-hand-pointer mr-1 text-neon"></i> Seleccioná una órbita para ver su ficha técnica…</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="quiz-sat" class="mt-8"></div>
+
+    <!-- Cierre de la misión + botones de impresión -->
+    <div class="iso-card p-6 sm:p-8 mt-8 text-center anim-fade border !border-neon/50">
+      <div class="text-4xl mb-2">🏁</div>
+      <h3 class="font-display text-xl font-extrabold text-white">¡Llegaste al final de la misión!</h3>
+      <p class="text-sm text-slate-300 mt-2 max-w-2xl mx-auto">Completá las trivias de los 6 módulos, imprimí la <b>teoría completa con letra grande (3 módulos por hoja A4)</b> para estudiar en papel, y generá tu <b>Reporte de Evaluación</b>.</p>
+      <div class="flex flex-wrap justify-center gap-3 mt-4">
+        <button onclick="openTheory()" class="bg-gradient-to-r from-electrico to-violetax hover:brightness-110 active:scale-95 transition text-white font-display font-bold px-6 py-3 rounded-full shadow-xl shadow-violet-900/40 text-sm">
+          <i class="fa-solid fa-book mr-1"></i> Imprimir teoría (elegí módulos)
+        </button>
+        <button onclick="openReport()" class="bg-gradient-to-r from-neon to-pink-500 hover:brightness-110 active:scale-95 transition text-white font-display font-bold px-6 py-3 rounded-full shadow-xl shadow-orange-900/40 text-sm">
+          <i class="fa-solid fa-award mr-1"></i> Generar Certificado / Reporte de Evaluación
+        </button>
+      </div>
+      <p class="text-[.65rem] text-slate-500 mt-2">El reporte incluye: fecha, escuela, curso, nombre del estudiante y detalle de preguntas con las opciones elegidas.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="max-w-7xl mx-auto px-4 py-8 text-center text-xs text-slate-500 no-print">
+  <p>💜 <b>TecnoRed · Misión Conexión</b> — Proyecto educativo de NTiCx · 4to año · Escuela Secundaria (Argentina).</p>
+  <p class="mt-1">Hecho con HTML + Tailwind + JavaScript nativo. Teoría y reporte se imprimen en A4 optimizado, o con <kbd class="bg-slate-800 px-1.5 py-0.5 rounded">Ctrl+P</kbd>.</p>
+</footer>
+
+<div id="toastBox" class="no-print"></div>
+<div id="confettiBox" class="no-print"></div>
+
+<!-- ============================================================
+     MODAL 1 · TEORÍA IMPRIMIBLE COMPLETA CON SELECCIÓN DE MÓDULOS
+     Letra ampliada → 3 módulos por hoja A4 (salto forzado por JS).
+     ============================================================ -->
+<div id="theoryWrap" class="hidden fixed inset-0 z-[100] overflow-y-auto bg-slate-950/85 backdrop-blur-sm p-3 sm:p-6">
+  <div class="max-w-4xl mx-auto my-4">
+    <!-- Controles (solo en pantalla) -->
+    <div class="no-print bg-slate-900 border border-slate-700 rounded-2xl p-4 mb-3">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <h3 class="font-display font-extrabold text-white"><i class="fa-solid fa-book-open text-sky-400 mr-2"></i>Imprimir teoría completa · elegí los módulos</h3>
+        <div class="flex gap-2">
+          <button onclick="theoryAll(true)" class="text-xs font-bold bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1.5 rounded-full transition">✔ Todas</button>
+          <button onclick="theoryAll(false)" class="text-xs font-bold bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1.5 rounded-full transition">✖ Ninguna</button>
+        </div>
+      </div>
+      <div id="theoryChecks" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-2"></div>
+      <p class="text-[.68rem] text-slate-400 mt-3">💡 Cada módulo incluye <b class="text-sky-300">¿Qué es?</b>, <b class="text-violet-300">¿Para qué sirve?</b>, <b class="text-menta">¿Cómo funciona?</b> y <b class="text-neon">ejemplos cotidianos</b>. Se imprime con <b class="text-white">letra ampliada en 2 columnas, exactamente 3 módulos por hoja A4</b> (salto de página automático). En el diálogo activá <b>“Gráficos de fondo”</b> para conservar colores, o elegí <b>“Guardar como PDF”</b>.</p>
+      <div class="flex justify-center gap-3 mt-3">
+        <button onclick="window.print()" class="bg-gradient-to-r from-electrico to-violetax hover:brightness-110 active:scale-95 transition text-white text-sm font-bold px-6 py-2.5 rounded-full shadow-lg shadow-violet-900/40">
+          <i class="fa-solid fa-print mr-1"></i> Imprimir teoría (A4)
+        </button>
+        <button onclick="closeTheory()" class="border border-slate-500 hover:bg-slate-800 transition text-slate-300 text-sm font-bold px-6 py-2.5 rounded-full">Cerrar</button>
+      </div>
+    </div>
+    <!-- Vista previa = exactamente lo que se imprime -->
+    <div id="theoryArea" class="bg-white rounded-xl shadow-2xl p-4 sm:p-6"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL 2 · REPORTE DE EVALUACIÓN (versión ultra-compacta)
+     ============================================================ -->
+<div id="reportWrap" class="hidden fixed inset-0 z-[100] overflow-y-auto bg-slate-950/85 backdrop-blur-sm p-3 sm:p-6">
+  <div id="printArea" class="max-w-4xl mx-auto bg-white text-slate-900 rounded-2xl shadow-2xl p-5 sm:p-7 my-4">
+
+    <!-- Encabezado mínimo: una sola línea -->
+    <div class="rp-head">
+      <b>📄 Reporte de Evaluación — NTiCx <span class="font-normal">· TecnoRed · 4to año</span></b>
+      <span id="rpFolio" class="font-mono">Folio: —</span>
+    </div>
+
+    <!-- Datos reducidos: 2 filas × 2 campos, con inputs subrayados -->
+    <div class="rp-fields">
+      <label>Fecha <input id="rpFecha" type="date"></label>
+      <label>Curso <input id="rpCurso" type="text" value="4to año — Secundaria"></label>
+      <label>Escuela <input id="rpEscuela" type="text" placeholder="Nombre de la institución"></label>
+      <label>Estudiante <input id="rpNombre" type="text" placeholder="Nombre y Apellido"></label>
+    </div>
+
+    <p class="rp-sec">Detalle de respuestas por módulo</p>
+    <div id="rpPreguntas"></div>
+
+    <!-- Firmas compactas -->
+    <div class="rp-signs"><div>Firma del estudiante</div><div>Firma del docente / sello</div></div>
+    <p class="rp-foot">TecnoRed · NTiCx 4to año — constancia de actividad evaluativa sobre redes informáticas.</p>
+
+    <!-- Botones (solo en pantalla) -->
+    <div class="flex justify-center gap-3 mt-4 no-print">
+      <button onclick="window.print()" class="bg-slate-900 hover:bg-sky-700 transition text-white text-sm font-bold px-6 py-2.5 rounded-full">
+        <i class="fa-solid fa-print mr-1"></i> Imprimir / Guardar PDF (A4)
+      </button>
+      <button onclick="closeReport()" class="border border-slate-400 hover:bg-slate-100 transition text-slate-700 text-sm font-bold px-6 py-2.5 rounded-full">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   JAVASCRIPT — Lógica completa de la aplicación
+   A) Datos · B) Estado · C) Gamificación · D) Pestañas
+   E) Trivias · F) Simuladores · G) Teoría imprimible · H) Reporte
+   ============================================================ */
+
+/* ---------- A) DATOS ---------- */
+
+const MODULES = {
+  redes:{ name:'Redes Informáticas',      emoji:'🖧',  color:'#3b82f6', tab:'redes', icon:'fa-network-wired' },
+  info: { name:'Info Analógica vs Digital',emoji:'〰️', color:'#8b5cf6', tab:'info',  icon:'fa-wave-square'   },
+  arq:  { name:'Arquitecturas de Red',    emoji:'🗺️', color:'#34d399', tab:'arq',   icon:'fa-map-location-dot' },
+  datos:{ name:'Redes de Datos',          emoji:'📦',  color:'#fb7a1e', tab:'datos', icon:'fa-box-open'      },
+  tel:  { name:'Red Telefónica',          emoji:'📞',  color:'#38bdf8', tab:'tel',   icon:'fa-phone'         },
+  sat:  { name:'Red Satelital',           emoji:'🛰️', color:'#a78bfa', tab:'sat',   icon:'fa-satellite'     },
+};
+const MOD_ORDER = ['redes','info','arq','datos','tel','sat'];
+
+/* ===== TEORÍA COMPLETA POR MÓDULO =====
+   Estructura fija: q = ¿Qué es? · p = ¿Para qué sirve?
+   f = ¿Cómo funciona? · e = Ejemplos cotidianos */
+const THEORY = {
+  redes:{
+    q:'Es un conjunto de <b>dos o más dispositivos</b> (llamados <b>nodos</b>: computadoras, celulares, servidores, impresoras, cámaras) conectados entre sí por <b>enlaces</b> —cables de cobre, fibra óptica u ondas de radio (Wi-Fi, Bluetooth)— con el fin de <b>intercambiar información y compartir recursos</b>. Cuando muchas redes se conectan entre sí forman una “red de redes”: eso es Internet.',
+    p:'Sirve para <b>compartir</b> archivos, carpetas, impresoras y una única conexión a Internet entre muchos usuarios; para <b>comunicarse</b> en tiempo real (mensajería, videollamadas, juegos online); para <b>acceder a servicios remotos</b> (nube, streaming, aulas virtuales, home banking); y para <b>ahorrar costos</b>: en vez de una impresora por computadora, alcanza una por red.',
+    f:'El nodo <b>emisor</b> divide la información en <b>paquetes</b> y los envía a través del <b>medio de transmisión</b> (señal eléctrica por cobre, pulsos de luz por fibra, ondas por aire). Dentro de una misma red, el <b>switch</b> dirige los datos al nodo correcto; entre redes distintas trabaja el <b>router</b>, que elige el mejor camino. Todos los equipos se entienden porque hablan las mismas reglas: los <b>protocolos</b> (TCP/IP). El nodo <b>receptor</b> reensambla los paquetes y reconstruye el mensaje original.',
+    e:'El Wi-Fi de la escuela, jugar online con amigos, mandar un trabajo a la impresora del aula, ver una serie en Netflix, subir una tarea a Drive, la red de cajas de un supermercado.',
+  },
+  info:{
+    q:'La <b>información analógica</b> está representada por señales que varían de forma <b>continua</b> (entre dos valores existen infinitos valores intermedios), como la voz, la temperatura o el surco de un disco de vinilo. La <b>información digital</b>, en cambio, usa valores <b>discretos</b>: se codifica en <b>bits</b> que solo valen <b>0 o 1</b> (8 bits = 1 <b>byte</b>; con bytes se representan números, letras, fotos, audio y video).',
+    p:'Lo analógico es la forma <b>natural</b> en que ocurren casi todos los fenómenos físicos (sonido, luz, temperatura). Lo digital permite que las computadoras <b>almacenen, procesen y transmitan</b> esa información sin perder calidad: se puede copiar infinitas veces, comprimir, cifrar (proteger) y corregir errores. Sin digitalización no existirían los celulares, los MP3, las fotos digitales ni Internet tal como la conocemos.',
+    f:'La conversión analógica→digital la hace un <b>ADC</b> (conversor) en tres pasos: 1) <b>Muestreo</b>: se mide el valor de la onda cada cierto tiempo (ej. el CD toma 44.100 muestras por segundo). 2) <b>Cuantificación</b>: a cada muestra se le asigna un número entero. 3) <b>Codificación</b>: ese número se traduce a binario. Cuantas más muestras y más bits por muestra, más fiel es la copia (pero más ocupa). Para volver a sonido/imagen, un <b>DAC</b> hace el camino inverso. Ventaja clave: como solo hay que distinguir 0 de 1, la señal digital se <b>regenera</b> y resiste el ruido; la analógica se degrada en cada copia.',
+    e:'Vinilo (analógico) vs. Spotify (digital); termómetro de mercurio vs. termómetro digital; llamadas por línea fija vs. audios de WhatsApp; fotos en rollo vs. fotos del celular; la guitarra en vivo vs. el archivo MP3.',
+  },
+  arq:{
+    q:'Son las distintas <b>escalas o tamaños</b> que puede tener una red, clasificadas según su <b>alcance geográfico</b>: <b>PAN</b> (Personal Area Network, ~10 m), <b>LAN</b> (Local Area Network, un hogar/aula/edificio, hasta ~1 km), <b>MAN</b> (Metropolitan Area Network, una ciudad) y <b>WAN</b> (Wide Area Network, países o continentes). Orden: PAN &lt; LAN &lt; MAN &lt; WAN.',
+    p:'Cada escala resuelve una necesidad distinta: la <b>PAN</b> conecta tus dispositivos personales sin cables; la <b>LAN</b> permite compartir archivos e impresoras en la escuela o tu casa; la <b>MAN</b> une sedes de una organización dentro de la misma ciudad (bancos, hospitales, municipio); la <b>WAN</b> conecta lugares lejanos y hace posible Internet, la nube y las videollamadas internacionales.',
+    f:'<b>PAN</b>: tecnologías de corto alcance como Bluetooth o Wi-Fi Direct, sin infraestructura. <b>LAN</b>: cableado Ethernet y/o puntos de acceso Wi-Fi administrados por un router/switch propios; alta velocidad y bajo costo. <b>MAN</b>: fibra óptica urbana, enlaces de microondas o antenas; suele ser operada por una empresa o el municipio. <b>WAN</b>: combina fibra de larga distancia, <b>cables submarinos</b> y satélites; los routers de cada extremo encaminan el tráfico entre redes. A mayor alcance, más equipos intermedios participan y más latencia (retardo) se acumula.',
+    e:'PAN: auriculares inalámbricos ↔ celu, smartwatch. LAN: la sala de informática, el Wi-Fi de tu casa, una consola en red local. MAN: sucursales bancarias de tu ciudad, semáforos inteligentes, red de cámaras municipales. WAN: videollamada con familiares en el exterior, jugar en servidores de otro país, subir fotos a la nube (Internet = la WAN más grande).',
+  },
+  datos:{
+    q:'Una <b>red de datos</b> es la infraestructura (cables, antenas, routers, servidores) más las reglas de comunicación que permiten <b>transmitir información digital</b> entre dispositivos, incluso si no están cerca ni conectados directamente. Su ejemplo máximo es <b>Internet</b>.',
+    p:'Sirve para todo lo que hacemos conectados: <b>navegar</b> por la web, enviar <b>mensajes y mails</b>, hacer <b>videollamadas</b>, ver <b>streaming</b>, jugar online, usar la <b>nube</b> (Drive, fotos), pagar con el celular y estudiar a distancia. Es la base de la economía y la educación digitales.',
+    f:'Funciona por <b>conmutación de paquetes</b>: el mensaje se divide en <b>paquetes</b> numerados que llevan la dirección IP de origen, la de destino y un trozo de los datos. Cada paquete viaja <b>por su cuenta</b>: los <b>routers</b> leen la IP destino y eligen el mejor camino disponible (no siempre el mismo). Al llegar, el protocolo <b>TCP</b> verifica que estén todos y en orden; si falta alguno, pide reenvío, y el mensaje se <b>reensambla</b>. El sistema <b>DNS</b> traduce los nombres amigables (youtube.com) a direcciones IP numéricas (ej. 8.8.8.8). Ventaja: si falla un camino, los paquetes toman otra ruta; la red es robusta y eficiente.',
+    e:'Mandar una foto por WhatsApp (viaja en paquetes), cargar un video de YouTube, una partida online, enviar la tarea por mail, una videollamada de Meet, el pago con QR del kiosco.',
+  },
+  tel:{
+    q:'Es el sistema de telecomunicaciones diseñado para <b>transmitir voz a distancia</b>. Nació como una red de <b>cables de cobre</b> con señal analógica (teléfono fijo), evolucionó a redes <b>móviles por antenas</b> (celdas) y hoy es mayormente <b>digital</b>: la voz viaja como datos por Internet (<b>VoIP</b>).',
+    p:'Sirve para comunicarnos por voz (y hoy también video y texto) con cualquier persona del mundo en tiempo real: llamadas familiares y de trabajo, servicios de emergencia (911/107), atención al cliente, consultas médicas a distancia y coordinación de empresas y organismos públicos.',
+    f:'El <b>micrófono</b> convierte la onda sonora (analógica) en <b>señal eléctrica</b>; la red la transporta; el <b>auricular</b> del otro lado la vuelve sonido. En la red fija clásica se usaba <b>conmutación de circuitos</b>: las centrales armaban un <b>canal dedicado</b> entre los dos teléfonos durante toda la llamada. En la red móvil, el territorio se divide en <b>celdas</b> con una antena cada una: tu celular se conecta a la más cercana y, si te movés, la llamada se <b>transfiere</b> de celda en celda sin cortarse (por eso se llama “celular”). Hoy domina la <b>conmutación de paquetes</b>: con <b>VoIP</b> la voz se digitaliza y viaja como cualquier dato. Evolución: 1876 teléfono de Bell → centrales con operadoras → conmutación automática (disco) → <b>1G</b> 1983 móvil analógico (“ladrillo”) → <b>2G</b> 1991 digital + SMS → <b>3G</b> 2001 Internet móvil → <b>4G</b> 2010 video/apps + VoIP → <b>5G</b> baja latencia, todo IP.',
+    e:'El fijo de la abuela, llamar a una pizzería, las llamadas y audios de WhatsApp, una clase por Meet, el 911, que el celu siga teniendo señal mientras viajás en colectivo (traspaso entre celdas), el roaming en otro país.',
+  },
+  sat:{
+    q:'Es una red que usa <b>satélites artificiales</b> en órbita como <b>repetidores espaciales</b>: reciben las señales que emiten las <b>estaciones terrenas</b> (antenas en la superficie), las amplifican y las reenvían a otra región del planeta. Un solo satélite puede cubrir zonas donde no llega ningún cable.',
+    p:'Sirve para <b>televisión satelital</b>, <b>GPS/navegación</b>, <b>pronóstico del tiempo</b> y satélites meteorológicos, <b>telefonía y datos en barcos, aviones y zonas rurales</b> o aisladas (muy relevante en el interior argentino), observación de la Tierra (incendios, inundaciones, cultivos) e investigación científica.',
+    f:'La estación terrena transmite hacia el satélite (<b>uplink</b>) en una frecuencia; el satélite la amplifica y la devuelve a la zona de cobertura (<b>downlink</b>) en otra frecuencia. Según su órbita: <b>LEO</b> (baja, 500–2.000 km): se mueven rapidísimo (~90 min por vuelta), tienen <b>baja latencia</b> (20–50 ms) y se agrupan en <b>constelaciones</b> de cientos o miles (Starlink) para cubrir todo el globo. <b>MEO</b> (media, ~20.000 km): vuelta en ~12 h; con ~24-30 satélites alcanza para el <b>GPS</b>. <b>GEO</b> (geoestacionaria, ~36.000 km sobre el ecuador): tarda 24 h en dar la vuelta, o sea gira <b>igual que la Tierra</b> y parece fijo en el cielo (por eso la antena parabólica apunta siempre al mismo lugar); ideal para TV, pero con alta latencia (~600 ms). Regla: a mayor altura, mayor cobertura por satélite… y mayor retardo de la señal.',
+    e:'El GPS del celular o Google Maps, la TV satelital (antena parabólica), el pronóstico del tiempo con imágenes satelitales, Internet Starlink en zonas rurales, ver un partido en vivo desde otro continente, seguir un colectivo en tiempo real.',
+  },
+};
+
+/* Trivias: 3 preguntas por módulo, con opción correcta y explicación */
+const QUIZZES = {
+  redes:[
+    { q:'Una red informática es…',
+      opts:['Un programa para diseñar páginas web','Un conjunto de dispositivos conectados que comparten información y recursos','Un tipo de virus que se propaga por Internet','Una red social con muchos usuarios'],
+      ok:1, exp:'Una red conecta dispositivos (celus, compus, servidores) para que intercambien datos y compartan recursos como archivos, impresoras o la conexión a Internet.' },
+    { q:'¿Cuál es la función principal de un router?',
+      opts:['Amplificar la señal de video','Guardar las fotos de todos los dispositivos','Encaminar los datos entre redes distintas (por ejemplo, entre tu casa e Internet)','Enfriar los equipos del servidor'],
+      ok:2, exp:'El router es como un “cartel de tránsito” inteligente: decide por dónde enviar cada paquete para que llegue a destino, conectando tu red local con otras redes.' },
+    { q:'¿Cuál es una ventaja clave de trabajar en red?',
+      opts:['Que los dispositivos nunca fallan','Compartir recursos e información de forma rápida (archivos, impresoras, conexión)','Que ya no hace falta antivirus','Poder usar Internet sin ningún dispositivo'],
+      ok:1, exp:'Compartir recursos ahorra plata y tiempo: muchos usuarios pueden usar la misma impresora, los mismos archivos o una única conexión a Internet.' },
+  ],
+  info:[
+    { q:'Una señal analógica se caracteriza porque…',
+      opts:['Toma solo dos valores: 0 y 1','Varía de forma continua, como la voz o la temperatura','Solo existe dentro de las computadoras','Se transmite únicamente por fibra óptica'],
+      ok:1, exp:'Lo analógico cambia de manera continua e infinita: entre dos valores siempre hay valores intermedios, igual que el volumen de tu voz.' },
+    { q:'La información digital está formada por…',
+      opts:['Ondas continuas','Colores','Bits: ceros y unos','Partículas de aire'],
+      ok:2, exp:'Lo digital trabaja con valores discretos: el bit es la unidad mínima y solo vale 0 o 1. Combinando bits se representan números, textos, fotos y videos.' },
+    { q:'¿Por qué la información digital resiste mejor el “ruido”?',
+      opts:['Porque viaja más rápido que la luz','Porque ocupa menos lugar siempre','Porque los equipos pueden regenerarla: solo hay que distinguir entre 0 y 1','Porque usa cables más gruesos'],
+      ok:2, exp:'Si una señal digital se degrada un poco, los equipos la regeneran porque solo deben reconocer dos estados. La analógica, en cambio, arrastra el ruido en cada copia.' },
+  ],
+  arq:[
+    { q:'Tu smartwatch conectado por Bluetooth al celular forma una red…',
+      opts:['PAN','WAN','MAN','LAN'],
+      ok:0, exp:'PAN (Personal Area Network) es la red de alcance personal, de unos pocos metros. Bluetooth y Wi-Fi Direct son ejemplos típicos.' },
+    { q:'La red del aula de informática de la escuela es un ejemplo de…',
+      opts:['WAN','LAN','PAN','MAN'],
+      ok:1, exp:'LAN (Local Area Network) cubre un espacio reducido como un aula, una casa o un edificio, y permite compartir archivos e impresoras.' },
+    { q:'Internet es el ejemplo más grande de red…',
+      opts:['MAN','PAN','LAN','WAN'],
+      ok:3, exp:'WAN (Wide Area Network) abarca países y continentes. Internet es la WAN más grande del planeta; la MAN queda en el medio: una ciudad.' },
+  ],
+  datos:[
+    { q:'En una red de datos, la información se divide en…',
+      opts:['Paquetes que viajan y se reensamblan en el destino','Cables de colores','Fotografías','Impulsos de luz únicamente'],
+      ok:0, exp:'La conmutación de paquetes divide el mensaje en pedacitos numerados; cada uno puede seguir una ruta distinta y en el destino se reordena todo.' },
+    { q:'Un protocolo de red es…',
+      opts:['Un aparato que conecta computadoras','Un conjunto de reglas que ordena la comunicación entre dispositivos','Un tipo de satélite','El nombre del cable de Internet'],
+      ok:1, exp:'Es como un idioma acordado: TCP/IP define cómo se piden, envían, direccionan y reciben los datos para que todos los equipos se entiendan.' },
+    { q:'Una dirección IP sirve para…',
+      opts:['Medir la velocidad de Internet','Identificar a cada dispositivo dentro de la red','Guardar archivos en la nube','Cargar más rápido los videos'],
+      ok:1, exp:'La IP es como el DNI o la dirección postal del dispositivo: permite que los paquetes sepan exactamente a quién buscar.' },
+  ],
+  tel:[
+    { q:'En el teléfono tradicional, la voz se convierte en…',
+      opts:['Humo','Señal eléctrica que viaja por el cable','Texto impreso','Luz visible'],
+      ok:1, exp:'El micrófono transforma las ondas de tu voz en señales eléctricas que viajan por la red hasta el auricular del otro lado, que las vuelve sonido.' },
+    { q:'La conmutación de circuitos significa que…',
+      opts:['Cada llamada usa un canal dedicado entre los dos aparatos','Las llamadas viajan en paquetes mezclados','Solo se puede llamar de noche','No hacen falta centrales telefónicas'],
+      ok:0, exp:'En la red telefónica clásica se “armaba un circuito” exclusivo durante la llamada. Hoy, la telefonía por IP comparte la red como Internet.' },
+    { q:'¿Qué cambió con las redes móviles 4G/5G?',
+      opts:['La voz dejó de existir','Los celulares dejaron de usar antenas','La voz viaja como datos por Internet (VoIP) y todo se volvió digital','Los teléfonos volvieron a ser analógicos'],
+      ok:2, exp:'Con 4G/5G las llamadas usan VoIP: la voz se digitaliza y viaja en paquetes por la misma red que los mensajes y los videos.' },
+  ],
+  sat:[
+    { q:'Un satélite de comunicaciones funciona como…',
+      opts:['Un router espacial que recibe, amplifica y reenvía señales','Una estrella artificial','Un espejo decorativo','Una antena que solo recibe TV'],
+      ok:0, exp:'El satélite recibe la señal de una estación terrena, la amplifica y la reenvía a otra zona del planeta: es un repetidor en órbita.' },
+    { q:'La órbita GEO (geoestacionaria) está a unos…',
+      opts:['200 km','2.000 km','36.000 km','1.000.000 km'],
+      ok:2, exp:'A ~36.000 km sobre el ecuador, el satélite tarda exactamente 24 h en dar la vuelta y parece “quieto” en el cielo. Se usa para TV satelital.' },
+    { q:'Las constelaciones LEO (órbita baja), como Starlink, se prefieren para Internet porque…',
+      opts:['Están más cerca de la Tierra y la señal tarda menos (menor latencia)','Son más baratas de lanzar al Sol','No necesitan energía','Funcionan bajo el agua'],
+      ok:0, exp:'Al orbitar a 500-2000 km, la señal recorre menos distancia: menor latencia, ideal para videollamadas y juegos online. Se necesitan muchos satélites para cubrir el globo.' },
+  ],
+};
+
+const NET_INFO = {
+  nube:   { emoji:'☁️', title:'Internet (la nube)', text:'Es la “red de redes”: una WAN gigante a la que tu red local se conecta a través del router. Ahí viven los servidores de tus apps favoritas.' },
+  router: { emoji:'📶', title:'Router', text:'El cerebro del camino: conecta tu red con Internet y decide por dónde enviar cada paquete. Además, reparte Wi-Fi y direcciones IP locales.' },
+  pc1:    { emoji:'💻', title:'Notebook (nodo emisor)', text:'Un nodo de la red: cuando pedís un video, actúa como EMISOR de la solicitud y RECEPTOR de los datos que vuelven del servidor.' },
+  servidor:{ emoji:'🖥️', title:'Servidor de archivos', text:'Una compu potente que “sirve” recursos a las demás: carpetas compartidas, el aula virtual de la escuela o las páginas web.' },
+  impresora:{ emoji:'🖨️', title:'Impresora en red', text:'Recurso compartido por excelencia: gracias a la LAN, todas las compus del aula pueden imprimir en el mismo equipo.' },
+  celu:   { emoji:'📱', title:'Celular por Wi-Fi', text:'Se conecta sin cables al router. Tu celu es un nodo más de la red y también tiene su propia PAN (auriculares, smartwatch).' },
+};
+
+const ARQ_ITEMS = [
+  { id:'a1', emoji:'🎧', label:'Auriculares Bluetooth ↔ celu', zone:'pan', hint:'Conecta dispositivos a menos de 10 metros: ¡es tu espacio personal!' },
+  { id:'a2', emoji:'⌚', label:'Smartwatch ↔ celular',          zone:'pan', hint:'Red de alcance personal (Personal Area Network).' },
+  { id:'a3', emoji:'💻', label:'Red del aula de informática',    zone:'lan', hint:'Un espacio local: la escuela o un edificio.' },
+  { id:'a4', emoji:'🗄️', label:'Servidor de la escuela',        zone:'lan', hint:'Comparte recursos dentro del edificio escolar.' },
+  { id:'a5', emoji:'🏦', label:'Dos sucursales bancarias de la ciudad', zone:'man', hint:'Están en la MISMA ciudad: alcance metropolitano.' },
+  { id:'a6', emoji:'🚦', label:'Semáforos inteligentes del municipio',  zone:'man', hint:'Una red que cubre toda la ciudad.' },
+  { id:'a7', emoji:'✈️', label:'Videollamada Argentina ↔ España', zone:'wan', hint:'Cruza países y continentes: alcance amplio.' },
+  { id:'a8', emoji:'🌍', label:'Internet / servicios en la nube',  zone:'wan', hint:'La red más grande del mundo: ¡global!' },
+];
+
+const TEL_DATA = [
+  { year:'1876', emoji:'📜', title:'Nace el teléfono', detail:'Alexander Graham Bell patenta el teléfono: la voz se transforma en señal eléctrica analógica que viaja por un cable de cobre hasta el otro aparato.' },
+  { year:'1920s', emoji:'👩‍💼', title:'Operadoras manuales', detail:'Para llamar, pedías línea a una operadora que conectaba los cables en una centralita. Así funcionaba la “conmutación” antes de la automatización.' },
+  { year:'1960s', emoji:'☎️', title:'Disco y conmutación automática', detail:'Llega el teléfono de disco: los pulsos marcan el número y centrales electromecánicas arman un circuito dedicado entre los dos aparatos.' },
+  { year:'1983', emoji:'🧱', title:'1G: el “ladrillo”', detail:'Primera telefonía móvil: analógica, solo voz, aparatos enormes y caros. Cada antena cubre una “celda” del territorio.' },
+  { year:'1991', emoji:'📟', title:'2G: digital + SMS', detail:'La voz se digitaliza (¡bits!) y nacen los mensajes de texto. Mejor calidad, más seguridad y baterías que duran días.' },
+  { year:'2001', emoji:'🌐', title:'3G: Internet en el bolsillo', detail:'Los datos móviles permiten navegar, mandar fotos y usar el correo desde el celular. La red telefónica empieza a parecerse a una red de datos.' },
+  { year:'2010', emoji:'📱', title:'4G LTE: video y apps', detail:'Alta velocidad para streaming, videollamadas y apps. Las llamadas pueden viajar como datos: es la VoIP (WhatsApp, Meet…).' },
+  { year:'2020s', emoji:'🚀', title:'5G y todo-IP', detail:'Muy baja latencia y miles de dispositivos conectados por celda. La voz es 100% digital en paquetes: la red telefónica y la red de datos ya son casi la misma cosa.' },
+];
+
+const SAT_DATA = {
+  leo:{ name:'LEO · Órbita baja', color:'#38bdf8', alt:'500 – 2.000 km', vel:'~27.000 km/h (vuelta en ~90 min)', lat:'20 – 50 ms', usos:'Internet satelital (Starlink), observación de la Tierra, estación espacial.', extra:'Como orbitan tan rápido y bajo, se necesitan CONSTELACIONES de cientos o miles de satélites para cubrir todo el planeta.' },
+  meo:{ name:'MEO · Órbita media', color:'#a78bfa', alt:'~20.000 km', vel:'vuelta en ~12 horas', lat:'~100 – 150 ms', usos:'GPS y navegación (Galileo, GLONASS).', extra:'Con pocos satélites (24-30) se cubre todo el globo: por eso el GPS funciona en cualquier punto de la Tierra.' },
+  geo:{ name:'GEO · Geoestacionaria', color:'#34d399', alt:'~36.000 km (sobre el ecuador)', vel:'vuelta en 24 h (¡parece quieto!)', lat:'~500 – 700 ms', usos:'TV satelital, clima, comunicaciones fijas.', extra:'Al girar igual que la Tierra, la antena parabólica de tu casa puede apuntar siempre al mismo punto del cielo.' },
+};
+
+/* ---------- B) ESTADO GLOBAL Y PERSISTENCIA ---------- */
+let state = {
+  xp: 0,
+  sims: {},
+  quiz: {},
+  badges: {},
+  netSeen: [],
+  telSeen: [],
+  satSeen: [],
+  arqPlaced: 0,
+};
+const LS_KEY = 'nticx4to_tecnored_v1';
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){ const s = JSON.parse(raw); state = Object.assign(state, s); }
+  }catch(e){ console.warn('No se pudo leer localStorage:', e); }
+}
+function saveState(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+  catch(e){ console.warn('No se pudo guardar:', e); }
+}
+
+/* ---------- C) GAMIFICACIÓN ---------- */
+const LEVELS = [
+  { min:0,   icon:'🐣', name:'Novato digital' },
+  { min:80,  icon:'🧭', name:'Explorador de bits' },
+  { min:170, icon:'🌐', name:'Navegante de redes' },
+  { min:260, icon:'🛠️', name:'Técnico de conexiones' },
+  { min:360, icon:'👑', name:'Conector master' },
+];
+function getLevel(xp){ let cur=LEVELS[0]; for(const l of LEVELS){ if(xp>=l.min) cur=l; } return cur; }
+function getNextLevel(xp){ for(const l of LEVELS){ if(xp<l.min) return l; } return null; }
+
+const BADGES = [
+  { id:'primer', icon:'🥇', name:'Primer paso',        desc:'Completá tu primera trivia',        cond:()=> quizzesDone()>=1 },
+  { id:'simu',   icon:'🕹️', name:'Manos a la obra',    desc:'Completá 3 simuladores',            cond:()=> Object.keys(state.sims).length>=3 },
+  { id:'perfe',  icon:'🎯', name:'Puntería perfecta',  desc:'Sacá 3/3 en alguna trivia',         cond:()=> MOD_ORDER.some(m=>{ const q=state.quiz[m]; return q&&q.done&&Object.values(q.answers).every(a=>a.ok); }) },
+  { id:'total',  icon:'🛰️', name:'Explorador total',   desc:'Completá las 6 trivias',            cond:()=> quizzesDone()>=6 },
+];
+
+function quizzesDone(){ return MOD_ORDER.filter(m=> state.quiz[m] && state.quiz[m].done).length; }
+
+function addXP(n, motivo){
+  const before = getLevel(state.xp);
+  state.xp += n;
+  showToast(`⚡ +${n} XP${motivo? ' · '+motivo:''}`);
+  const after = getLevel(state.xp);
+  if(after.name !== before.name){
+    showToast(`🎉 ¡Subiste a nivel: ${after.icon} ${after.name}!`);
+    confetti(60);
+  }
+  evaluateBadges();
+  updateHUD();
+  saveState();
+}
+
+function evaluateBadges(){
+  BADGES.forEach(b=>{
+    if(!state.badges[b.id] && b.cond()){
+      state.badges[b.id] = true;
+      showToast(`🏅 Insignia desbloqueada: ${b.icon} ${b.name}`);
+      confetti(45);
+    }
+  });
+}
+
+function updateHUD(){
+  const lv = getLevel(state.xp), nx = getNextLevel(state.xp);
+  document.getElementById('hudLevelIcon').textContent = lv.icon;
+  document.getElementById('hudLevelName').textContent = lv.name;
+  document.getElementById('xpText').textContent = state.xp + ' XP';
+  const span = nx ? (nx.min - lv.min) : 1;
+  const pctLv = nx ? Math.min(100, ((state.xp - lv.min)/span)*100) : 100;
+  document.getElementById('xpBar').style.width = pctLv + '%';
+
+  const done = quizzesDone();
+  const pct = Math.round(done/6*100);
+  document.getElementById('globalBar').style.width = pct + '%';
+  document.getElementById('globalText').textContent = pct + '%';
+
+  const ring = document.getElementById('dashRing');
+  if(ring){
+    ring.setAttribute('stroke-dashoffset', String(327*(1-pct/100)));
+    document.getElementById('dashRingText').textContent = pct + '%';
+    document.getElementById('dashLevel').textContent = `${lv.icon} ${lv.name}`;
+    document.getElementById('dashXp').textContent = `⚡ ${state.xp} pts`;
+    document.getElementById('badgeCount').textContent = `(${Object.keys(state.badges).length}/4)`;
+  }
+  renderBadges();
+  renderDashModules();
+}
+
+function renderBadges(){
+  const box = document.getElementById('dashBadges');
+  if(!box) return;
+  box.innerHTML = BADGES.map(b=>{
+    const got = !!state.badges[b.id];
+    return `<div class="rounded-xl border p-3 text-center transition ${got? 'bg-gradient-to-b from-yellow-500/10 to-transparent border-yellow-500/40 pop-in':'bg-slate-950/60 border-slate-800 opacity-60 grayscale'}">
+      <div class="text-2xl">${b.icon}</div>
+      <p class="text-[.7rem] font-display font-bold mt-1 ${got?'text-yellow-300':'text-slate-400'}">${b.name}</p>
+      <p class="text-[.6rem] text-slate-500 leading-tight">${b.desc}</p>
+    </div>`;
+  }).join('');
+}
+
+function renderDashModules(){
+  const box = document.getElementById('dashModules');
+  if(!box) return;
+  box.innerHTML = MOD_ORDER.map((m,i)=>{
+    const meta = MODULES[m];
+    const q = state.quiz[m];
+    let chip = `<span class="chip bg-slate-700 text-slate-300">Pendiente</span>`;
+    if(q && q.done){
+      const ok = Object.values(q.answers).filter(a=>a.ok).length;
+      chip = `<span class="chip ${ok===3?'bg-menta/20 text-menta':'bg-sky-500/20 text-sky-300'}">Completo · ${ok}/3 ✓</span>`;
+    } else if(q && Object.keys(q.answers||{}).length>0){
+      chip = `<span class="chip bg-neon/20 text-neon">En curso</span>`;
+    }
+    return `<div class="iso-card mod-card p-5 anim-fade" onclick="showTab('${meta.tab}')" style="border-left:4px solid ${meta.color}">
+      <div class="flex items-start justify-between gap-2">
+        <div class="text-3xl">${meta.emoji}</div>${chip}
+      </div>
+      <h4 class="font-display font-bold mt-2 text-sm" style="color:${meta.color}">Módulo ${i+1} · ${meta.name}</h4>
+      <p class="text-[.68rem] text-slate-400 mt-1"><i class="fa-solid fa-arrow-right mr-1"></i>Tarjetas + simulador + trivia de 3 preguntas</p>
+    </div>`;
+  }).join('');
+}
+
+function showToast(msg){
+  const box = document.getElementById('toastBox');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = msg;
+  box.appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(()=>t.remove(),420); }, 2600);
+}
+
+function confetti(n=40){
+  const box = document.getElementById('confettiBox');
+  const colors = ['#3b82f6','#8b5cf6','#34d399','#fb7a1e','#f472b6','#38bdf8'];
+  for(let i=0;i<n;i++){
+    const p = document.createElement('div');
+    p.className='confetti-piece';
+    p.style.left = Math.random()*100 + 'vw';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDuration = (1.6 + Math.random()*1.4) + 's';
+    p.style.animationDelay = (Math.random()*.5) + 's';
+    p.style.borderRadius = Math.random()>.5 ? '50%' : '2px';
+    box.appendChild(p);
+    setTimeout(()=>p.remove(), 3600);
+  }
+}
+
+/* ---------- D) NAVEGACIÓN POR PESTAÑAS ---------- */
+function showTab(tab){
+  document.querySelectorAll('.tab-content').forEach(s=> s.classList.add('hidden'));
+  const target = document.getElementById('tab-'+tab);
+  target.classList.remove('hidden');
+  target.classList.remove('anim-fade'); void target.offsetWidth; target.classList.add('anim-fade');
+  document.querySelectorAll('.tab-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+/* ---------- E) TRIVIAS ---------- */
+function renderQuiz(mod){
+  const cont = document.getElementById('quiz-'+mod);
+  if(!cont) return;
+  const data = QUIZZES[mod];
+  const st = state.quiz[mod] || (state.quiz[mod] = { answers:{}, done:false });
+
+  let html = `<div class="iso-card p-5 sm:p-6 border !border-violet-500/40">
+    <div class="flex items-center justify-between flex-wrap gap-2">
+      <h3 class="font-display font-bold text-lg"><i class="fa-solid fa-brain text-violet-400 mr-2"></i>Trivia del módulo · ${MODULES[mod].name}</h3>
+      <span id="quizScore-${mod}" class="text-xs font-bold bg-slate-950 border border-slate-700 rounded-full px-3 py-1">Respondidas: 0/3</span>
+    </div>
+    <p class="text-xs text-slate-400 mb-4">✅ Cada acierto suma <b class="text-neon">+10 XP</b>. Terminar la trivia suma <b class="text-neon">+15 XP</b> extra y completa el módulo.</p>`;
+
+  data.forEach((item, qi)=>{
+    html += `<div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 mb-3" id="qq-${mod}-${qi}">
+      <p class="font-semibold text-sm text-slate-100 mb-3"><span class="text-neon font-display font-extrabold mr-1">P${qi+1}.</span>${item.q}</p>
+      <div class="grid sm:grid-cols-2 gap-2">`;
+    item.opts.forEach((op, oi)=>{
+      html += `<button class="opt-btn text-left text-xs sm:text-sm bg-slate-900 border border-slate-700 hover:border-sky-400 hover:bg-slate-800 transition rounded-xl px-3 py-2.5"
+                data-mod="${mod}" data-qi="${qi}" data-oi="${oi}">
+                <span class="font-bold text-sky-400 mr-1">${String.fromCharCode(65+oi)})</span>${op}</button>`;
+    });
+    html += `</div><div id="fb-${mod}-${qi}" class="hidden mt-3 text-xs rounded-xl px-3 py-2.5"></div></div>`;
+  });
+
+  html += `<div id="quizEnd-${mod}" class="hidden"></div></div>`;
+  cont.innerHTML = html;
+
+  cont.addEventListener('click', e=>{
+    const btn = e.target.closest('.opt-btn');
+    if(btn) answerQuiz(btn.dataset.mod, +btn.dataset.qi, +btn.dataset.oi, btn);
+  });
+
+  Object.entries(st.answers).forEach(([qi, a])=> paintAnswered(mod, +qi, a.sel, a.ok));
+  if(st.done) showQuizEnd(mod, false);
+}
+
+function answerQuiz(mod, qi, oi, btn){
+  const st = state.quiz[mod];
+  if(st.answers[qi]) return;
+  const item = QUIZZES[mod][qi];
+  const ok = (oi === item.ok);
+  st.answers[qi] = { sel:oi, ok };
+  paintAnswered(mod, qi, oi, ok);
+  if(ok) addXP(10, 'respuesta correcta');
+  if(Object.keys(st.answers).length === QUIZZES[mod].length){
+    st.done = true;
+    addXP(15, '¡trivia completada!');
+    showQuizEnd(mod, true);
+    confetti(50);
+  }
+  updateHUD(); saveState();
+}
+
+function paintAnswered(mod, qi, sel, ok){
+  const item = QUIZZES[mod][qi];
+  const box = document.getElementById('qq-'+mod+'-'+qi);
+  if(!box) return;
+  box.querySelectorAll('.opt-btn').forEach(b=>{
+    const oi = +b.dataset.oi;
+    b.disabled = true; b.classList.add('opacity-60','cursor-not-allowed');
+    if(oi === item.ok){ b.classList.remove('opacity-60'); b.classList.add('!border-menta','bg-menta/10','text-menta'); }
+    if(oi === sel && !ok){ b.classList.remove('opacity-60'); b.classList.add('!border-red-400','bg-red-500/10','text-red-300'); }
+  });
+  const fb = document.getElementById('fb-'+mod+'-'+qi);
+  fb.className = 'mt-3 text-xs rounded-xl px-3 py-2.5 pop-in border ' + (ok
+    ? 'bg-menta/10 border-menta/40 text-menta'
+    : 'bg-red-500/10 border-red-400/40 text-red-300');
+  fb.innerHTML = `<b>${ok? '✅ ¡Correcto! +10 XP' : '❌ Ups… no era esa.'}</b> <span class="text-slate-300">${item.exp}</span>`;
+  fb.classList.remove('hidden');
+  const score = Object.keys(state.quiz[mod].answers).length;
+  const sc = document.getElementById('quizScore-'+mod);
+  if(sc) sc.textContent = 'Respondidas: '+score+'/3';
+}
+
+function showQuizEnd(mod, celebrate){
+  const st = state.quiz[mod];
+  const ok = Object.values(st.answers).filter(a=>a.ok).length;
+  const end = document.getElementById('quizEnd-'+mod);
+  if(!end) return;
+  const idx = MOD_ORDER.indexOf(mod);
+  const nextMod = MOD_ORDER[idx+1];
+  end.classList.remove('hidden');
+  end.innerHTML = `<div class="mt-2 bg-gradient-to-r ${ok===3? 'from-menta/20 to-sky-500/10 border-menta/50':'from-violetax/20 to-sky-500/10 border-violet-500/40'} border rounded-2xl p-4 flex flex-wrap items-center gap-3 pop-in">
+    <div class="text-3xl">${ok===3? '🏆': ok>=2? '🎉':'📚'}</div>
+    <div class="flex-1 min-w-[200px]">
+      <p class="font-display font-bold text-sm text-white">Módulo completado · Puntaje: ${ok}/3</p>
+      <p class="text-xs text-slate-300">${ok===3? '¡Perfecto! Sos oficialmente una estrella de las redes ✨': ok>=2? '¡Muy bien! Repasá el error y seguís avanzando 💪':'Dale otra vuelta a las tarjetas del módulo y volvé a intentarlo en clase 🔁'}</p>
+    </div>
+    ${nextMod? `<button onclick="showTab('${MODULES[nextMod].tab}')" class="bg-white/10 hover:bg-white/20 border border-white/20 transition text-xs font-bold px-4 py-2 rounded-full">Siguiente módulo <i class="fa-solid fa-arrow-right ml-1"></i></button>`:''}
+    <button onclick="openReport()" class="bg-gradient-to-r from-neon to-orange-500 hover:brightness-110 transition text-xs font-bold px-4 py-2 rounded-full text-white">📄 Generar Certificado / Reporte</button>
+  </div>`;
+  if(celebrate && ok===3) showToast('🏆 ¡Puntaje perfecto en '+MODULES[mod].name+'!');
+}
+
+/* ---------- F) SIMULADORES ---------- */
+function completeSim(id, label){
+  if(state.sims[id]) return;
+  state.sims[id] = true;
+  addXP(20, 'simulador: '+label);
+  saveState();
+}
+
+function isoTile(x, y, emoji, label, color, extraClass=''){
+  return `<g class="${extraClass}" transform="translate(${x},${y})">
+    <polygon points="0,14 46,26 0,38 -46,26" fill="${color}" opacity=".25"/>
+    <polygon points="0,-26 46,0 0,26 -46,0" fill="#0f172a" stroke="${color}" stroke-width="1.6"/>
+    <polygon points="0,-26 46,0 0,26 -46,0" fill="${color}" opacity=".12"/>
+    <text x="0" y="8" text-anchor="middle" font-size="24">${emoji}</text>
+    ${label? `<text x="0" y="54" text-anchor="middle" font-size="11" fill="#cbd5e1" font-family="Inter,sans-serif">${label}</text>`:''}
+  </g>`;
+}
+
+function renderModuleHeaders(){
+  document.querySelectorAll('.module-header').forEach(el=>{
+    const { emoji, title, sub, color } = el.dataset;
+    el.innerHTML = `
+    <div class="iso-card p-5 sm:p-7 flex flex-col sm:flex-row gap-4 items-center anim-fade" style="border-left:5px solid ${color}">
+      <svg viewBox="0 0 150 120" class="w-32 h-28 shrink-0 floaty">
+        <polygon points="75,20 135,55 75,90 15,55" fill="${color}" opacity=".15"/>
+        <polygon points="75,20 135,55 75,90 15,55" fill="none" stroke="${color}" stroke-width="2"/>
+        <polygon points="75,38 105,55 75,72 45,55" fill="#0f172a" stroke="${color}" stroke-width="1.2" opacity=".9"/>
+        <text x="75" y="64" text-anchor="middle" font-size="24">${emoji}</text>
+        <circle cx="20" cy="25" r="3" fill="#34d399"/><circle cx="132" cy="28" r="2.5" fill="#fb7a1e"/><circle cx="128" cy="98" r="2" fill="#8b5cf6"/>
+      </svg>
+      <div>
+        <p class="text-[.65rem] uppercase tracking-[.25em] font-bold" style="color:${color}">Módulo NTiCx</p>
+        <h2 class="font-display text-2xl sm:text-3xl font-extrabold text-white leading-tight">${title}</h2>
+        <p class="text-sm text-slate-300 mt-1">${sub}</p>
+      </div>
+    </div>`;
+  });
+}
+
+function renderModuleNav(){
+  document.querySelectorAll('.module-nav').forEach(el=>{
+    const next = el.dataset.next;
+    const meta = MODULES[next];
+    el.innerHTML = `<div class="mt-6 flex justify-end">
+      <button onclick="showTab('${meta.tab}')" class="bg-gradient-to-r from-electrico to-violetax hover:brightness-110 active:scale-95 transition text-white text-sm font-bold px-6 py-3 rounded-full shadow-lg shadow-violet-900/40">
+        Siguiente: ${meta.emoji} ${meta.name} <i class="fa-solid fa-arrow-right ml-1"></i>
+      </button></div>`;
+  });
+}
+
+function renderHero(){
+  const wrap = document.getElementById('heroSvgWrap');
+  const cx=320, cy=195;
+  const nodes = [
+    { x:320, y:60,  e:'☁️', l:'Internet', c:'#38bdf8' },
+    { x:140, y:120, e:'💻', l:'Notebook', c:'#8b5cf6' },
+    { x:500, y:120, e:'🖥️', l:'Servidor', c:'#34d399' },
+    { x:140, y:280, e:'📱', l:'Celular', c:'#fb7a1e' },
+    { x:500, y:280, e:'🖨️', l:'Impresora', c:'#38bdf8' },
+    { x:320, y:330, e:'🛰️', l:'Satélite', c:'#a78bfa' },
+  ];
+  let cables = nodes.map(n=>`<line x1="${cx}" y1="${cy}" x2="${n.x}" y2="${n.y}" stroke="${n.c}" stroke-width="2" class="cable" opacity=".8"/>`).join('');
+  let tiles = nodes.map((n,i)=>`<g class="${i%2? 'floaty':'floaty-slow'}" style="animation-delay:${i*.4}s">${isoTile(n.x,n.y,n.e,n.l,n.c)}</g>`).join('');
+  wrap.innerHTML = `<svg viewBox="0 0 640 400" class="w-full h-auto">
+    <defs>
+      <radialGradient id="gHero" cx="50%" cy="45%" r="60%">
+        <stop offset="0" stop-color="#1e293b"/><stop offset="1" stop-color="#070c1b"/>
+      </radialGradient>
+    </defs>
+    <rect width="640" height="400" rx="18" fill="url(#gHero)"/>
+    ${cables}
+    <g class="floaty">${isoTile(cx,cy,'📶','Router central','#f472b6')}</g>
+    ${tiles}
+    <circle cx="60" cy="50" r="2.5" fill="#34d399" class="floaty"/><circle cx="580" cy="60" r="3" fill="#fb7a1e" class="floaty-slow"/><circle cx="600" cy="350" r="2" fill="#38bdf8" class="floaty"/>
+  </svg>`;
+}
+
+/* SIMULADOR 1 · Diagrama de red interactivo */
+function initNetDiagram(){
+  const svg = document.getElementById('netSvg');
+  const cx=320, cy=190;
+  const nodes = [
+    { key:'nube',      x:320, y:52,  e:'☁️', l:'Internet', c:'#38bdf8' },
+    { key:'pc1',       x:110, y:110, e:'💻', l:'Notebook', c:'#8b5cf6' },
+    { key:'servidor',  x:530, y:110, e:'🖥️', l:'Servidor', c:'#34d399' },
+    { key:'celu',      x:110, y:285, e:'📱', l:'Celular', c:'#fb7a1e' },
+    { key:'impresora', x:530, y:285, e:'🖨️', l:'Impresora', c:'#38bdf8' },
+  ];
+  let html = `<defs><radialGradient id="gNet" cx="50%" cy="45%" r="65%"><stop offset="0" stop-color="#131c33"/><stop offset="1" stop-color="#070c1b"/></radialGradient></defs>
+    <rect width="640" height="380" rx="16" fill="url(#gNet)"/>`;
+  html += nodes.map(n=>`<line x1="${cx}" y1="${cy}" x2="${n.x}" y2="${n.y}" stroke="${n.c}" stroke-width="2" class="cable" opacity=".75"/>`).join('');
+  html += `<g class="net-node floaty" data-key="router" transform="translate(${cx},${cy})">
+      <polygon points="0,-34 60,0 0,34 -60,0" fill="#0f172a" stroke="#f472b6" stroke-width="2"/>
+      <polygon points="0,-34 60,0 0,34 -60,0" fill="#f472b6" opacity=".14"/>
+      <text x="0" y="10" text-anchor="middle" font-size="32">📶</text>
+      <text x="0" y="62" text-anchor="middle" font-size="12" fill="#f9a8d4" font-family="Inter,sans-serif" font-weight="bold">Router</text>
+    </g>`;
+  html += nodes.map(n=>`<g class="net-node" data-key="${n.key}">${isoTile(n.x,n.y,n.e,n.l,n.c)}</g>`).join('');
+  svg.innerHTML = html;
+
+  svg.querySelectorAll('.net-node').forEach(g=>{
+    g.addEventListener('click', ()=>{
+      const key = g.dataset.key, info = NET_INFO[key];
+      svg.querySelectorAll('.net-node').forEach(o=>o.classList.remove('selected'));
+      g.classList.add('selected');
+      document.getElementById('netInfoEmoji').textContent = info.emoji;
+      document.getElementById('netInfoTitle').textContent = info.title;
+      document.getElementById('netInfoText').textContent = info.text;
+      const panel = document.getElementById('netInfo');
+      panel.classList.add('pop-in');
+      setTimeout(()=>panel.classList.remove('pop-in'), 400);
+      if(!state.netSeen.includes(key)){
+        state.netSeen.push(key); saveState();
+        if(state.netSeen.length >= 4) completeSim('netDiagram','diagrama de red explorado');
+      }
+    });
+    g.addEventListener('mouseenter', ()=>{
+      const info = NET_INFO[g.dataset.key];
+      if(info) document.getElementById('netInfoTitle').textContent = info.title;
+    });
+  });
+}
+
+/* SIMULADOR 2 · Conversor analógico → digital */
+function initADConverter(){
+  const cv = document.getElementById('adCanvas');
+  if(!cv) return;
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height, midY = H/2 - 20;
+  let phase = 0, samples = null;
+
+  const freqEl = document.getElementById('adFreq');
+  const ampEl  = document.getElementById('adAmp');
+  const sampEl = document.getElementById('adSamples');
+  sampEl.addEventListener('input', ()=> document.getElementById('adSamplesN').textContent = sampEl.value);
+
+  function wave(x){
+    const f = parseFloat(freqEl.value), a = parseFloat(ampEl.value);
+    return Math.sin(x*0.02*f + phase) * a * (0.75 + 0.25*Math.sin(x*0.005 + phase*0.7));
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle = '#1e293b'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(0, midY); ctx.lineTo(W, midY); ctx.stroke();
+    ctx.fillStyle='#475569'; ctx.font='11px Inter';
+    ctx.fillText('Señal analógica (continua) 🎙️', 12, 20);
+
+    const grad = ctx.createLinearGradient(0,0,W,0);
+    grad.addColorStop(0,'#38bdf8'); grad.addColorStop(.5,'#8b5cf6'); grad.addColorStop(1,'#34d399');
+    ctx.strokeStyle = grad; ctx.lineWidth = 3; ctx.shadowColor='rgba(59,130,246,.6)'; ctx.shadowBlur=8;
+    ctx.beginPath();
+    for(let x=0;x<=W;x+=2){
+      const y = midY - wave(x);
+      x===0? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.stroke(); ctx.shadowBlur=0;
+
+    if(samples){
+      ctx.strokeStyle = '#fb7a1e'; ctx.lineWidth = 2; ctx.setLineDash([4,3]);
+      ctx.beginPath();
+      samples.forEach((s,i)=>{ i===0? ctx.moveTo(s.x, midY - s.v) : ctx.lineTo(s.x, midY - s.v); });
+      ctx.stroke(); ctx.setLineDash([]);
+      samples.forEach(s=>{
+        ctx.fillStyle='#fb7a1e'; ctx.shadowColor='#fb7a1e'; ctx.shadowBlur=8;
+        ctx.beginPath(); ctx.arc(s.x, midY - s.v, 5, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        ctx.fillStyle='#fdba74'; ctx.font='bold 10px monospace';
+        ctx.fillText(String(s.bits), s.x-11, midY - s.v - 12);
+      });
+      ctx.fillStyle='#fb7a1e'; ctx.font='11px Inter';
+      ctx.fillText('Muestreo digital (discreto) 🔢', 12, H-12);
+    }
+    phase += 0.045;
+    requestAnimationFrame(draw);
+  }
+
+  document.getElementById('btnSample').addEventListener('click', ()=>{
+    const n = parseInt(sampEl.value);
+    const amp = parseFloat(ampEl.value);
+    samples = [];
+    for(let i=0;i<n;i++){
+      const x = 40 + (W-80) * (i/(n-1));
+      const v = wave(x);
+      const norm = Math.max(0, Math.min(15, Math.round((v/(amp||1) * 0.5 + 0.5) * 15)));
+      samples.push({ x, v, bits: norm.toString(2).padStart(4,'0'), norm });
+    }
+    document.getElementById('adBits').innerHTML = samples.map((s,i)=>
+      `<div>m${i+1}: <b class="text-white">${s.bits}</b> <span class="text-slate-500">(=${s.norm})</span></div>`).join('');
+    document.getElementById('adMsg').innerHTML = `✅ Tomaste <b class="text-white">${n} muestras</b>. Cada muestra se midió, se convirtió en un número de 0 a 15 y se expresó en <b class="text-menta">binario de 4 bits</b>. Así funciona un conversor analógico-digital (ADC) de verdad: ¡tu música favorita es exactamente esto!`;
+    completeSim('adConverter','conversor analógico→digital');
+  });
+
+  draw();
+}
+
+/* SIMULADOR 3 · Clasificador PAN/LAN/MAN/WAN */
+function initArqSim(){
+  const pool = document.getElementById('arqPool');
+  if(!pool) return;
+  let selected = null;
+
+  ARQ_ITEMS.forEach(it=>{
+    const chip = document.createElement('div');
+    chip.className = 'arq-chip bg-slate-900 border border-slate-600 rounded-xl px-3 py-2 text-xs font-semibold flex items-center gap-2 shadow';
+    chip.draggable = true;
+    chip.dataset.id = it.id;
+    chip.innerHTML = `<span class="text-base">${it.emoji}</span><span>${it.label}</span>`;
+    chip.addEventListener('dragstart', e=> e.dataTransfer.setData('text/plain', it.id));
+    chip.addEventListener('click', ()=>{
+      if(chip.classList.contains('ok')) return;
+      document.querySelectorAll('.arq-chip').forEach(c=>c.classList.remove('selected'));
+      chip.classList.add('selected'); selected = it.id;
+      showToast('👆 Ahora tocá la zona donde debería ir');
+    });
+    pool.appendChild(chip);
+  });
+
+  document.querySelectorAll('.zone-box').forEach(zone=>{
+    zone.addEventListener('dragover', e=>{ e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', ()=> zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e=>{
+      e.preventDefault(); zone.classList.remove('drag-over');
+      attemptPlace(e.dataTransfer.getData('text/plain'), zone.dataset.zone, zone);
+    });
+    zone.addEventListener('click', ()=>{
+      if(selected){ attemptPlace(selected, zone.dataset.zone, zone); selected=null; }
+    });
+  });
+
+  function attemptPlace(itemId, zoneId, zoneEl){
+    const item = ARQ_ITEMS.find(i=>i.id===itemId);
+    const chip = document.querySelector(`.arq-chip[data-id="${itemId}"]`);
+    if(!item || !chip || chip.classList.contains('ok')) return;
+    chip.classList.remove('selected');
+    if(item.zone === zoneId){
+      chip.classList.add('ok','pop-in');
+      chip.draggable = false;
+      zoneEl.querySelector('.zone-items').appendChild(chip);
+      state.arqPlaced++; saveState();
+      document.getElementById('arqCount').textContent = state.arqPlaced + '/8';
+      showToast(`✅ ¡Correcto! ${item.emoji} va en ${zoneId.toUpperCase()}`);
+      if(state.arqPlaced >= 8){
+        completeSim('arqMap','mapa de arquitecturas completo');
+        confetti(50);
+        showToast('🏆 ¡Clasificaste los 8 escenarios! Sos un crack de las arquitecturas.');
+      }
+    }else{
+      zoneEl.classList.add('zone-error');
+      chip.classList.add('shake');
+      setTimeout(()=>{ zoneEl.classList.remove('zone-error'); chip.classList.remove('shake'); }, 500);
+      showToast(`🤔 Pista: ${item.hint}`);
+    }
+  }
+  document.getElementById('arqCount').textContent = (state.arqPlaced||0) + '/8';
+}
+
+/* SIMULADOR 4 · Envío de paquetes */
+function initPacketSim(){
+  const btn = document.getElementById('btnSend');
+  if(!btn) return;
+  btn.addEventListener('click', ()=>{
+    const msg = document.getElementById('pktInput').value.trim() || '¡Hola red!';
+    const track = document.getElementById('pktTrack');
+    const out = document.getElementById('pktOut');
+    out.innerHTML = '';
+    track.querySelectorAll('.pkt').forEach(p=>p.remove());
+
+    const chunks = [];
+    for(let i=0;i<msg.length;i+=11) chunks.push(msg.slice(i,i+11));
+    showToast(`📦 Tu mensaje se dividió en ${chunks.length} paquete${chunks.length>1?'s':''}`);
+
+    let arrived = 0;
+    chunks.forEach((ch,i)=>{
+      const p = document.createElement('div');
+      p.className = 'pkt';
+      p.innerHTML = `#${i+1} “${ch}”`;
+      p.style.left = '2%'; p.style.top = '50%';
+      track.appendChild(p);
+      const yMid1 = 15 + Math.random()*60;
+      const anim = p.animate([
+        { left:'2%',  top:'48%', transform:'scale(.8) rotate(0deg)' },
+        { left:'30%', top:yMid1+'%', transform:'scale(1) rotate(-4deg)' },
+        { left:'60%', top:(100-yMid1)+'%', transform:'scale(1) rotate(4deg)' },
+        { left:'88%', top:'48%', transform:'scale(.9) rotate(0deg)' },
+      ], { duration: 2200, delay: i*520, easing:'ease-in-out', fill:'forwards' });
+      anim.onfinish = ()=>{
+        p.remove();
+        arrived++;
+        const span = document.createElement('span');
+        span.className = 'pop-in inline-block';
+        span.innerHTML = `<span class="text-sky-400">#${i+1}</span> ${ch} `;
+        out.appendChild(span);
+        if(arrived === chunks.length){
+          showToast('🎉 ¡Mensaje entregado y reensamblado en el servidor!');
+          completeSim('packetSim','envío de paquetes');
+        }
+      };
+    });
+  });
+}
+
+/* SIMULADOR 5 · Línea de tiempo telefónica */
+function initTelTimeline(){
+  const box = document.getElementById('telCards');
+  if(!box) return;
+  box.innerHTML = TEL_DATA.map((t,i)=>`
+    <button class="tel-card shrink-0 w-44 text-left iso-card p-4 transition" data-i="${i}">
+      <p class="font-mono text-[.65rem] font-bold" style="color:${i%2? '#fb7a1e':'#38bdf8'}">${t.year}</p>
+      <div class="text-3xl my-2">${t.emoji}</div>
+      <p class="font-display font-bold text-xs text-slate-100 leading-snug">${t.title}</p>
+      <p class="text-[.6rem] text-slate-500 mt-1">Clic para ver el detalle →</p>
+    </button>`).join('');
+
+  box.addEventListener('click', e=>{
+    const card = e.target.closest('.tel-card');
+    if(!card) return;
+    const t = TEL_DATA[card.dataset.i];
+    document.querySelectorAll('.tel-card').forEach(c=>c.classList.remove('!border-neon'));
+    card.classList.add('!border-neon');
+    const det = document.getElementById('telDetail');
+    det.innerHTML = `<div class="pop-in text-left">
+      <div class="flex items-center gap-3">
+        <div class="text-4xl">${t.emoji}</div>
+        <div><p class="font-mono text-xs text-neon font-bold">${t.year}</p>
+        <h4 class="font-display font-extrabold text-white">${t.title}</h4></div>
+      </div>
+      <p class="text-sm text-slate-300 mt-3">${t.detail}</p></div>`;
+    if(!state.telSeen.includes(t.year)){
+      state.telSeen.push(t.year); saveState();
+      if(state.telSeen.length >= 4) completeSim('telTimeline','línea de tiempo telefónica');
+    }
+  });
+}
+
+/* SIMULADOR 6 · Órbitas satelitales */
+function initSatSim(){
+  const svg = document.getElementById('satSvg');
+  if(!svg) return;
+  svg.innerHTML = `
+    <defs>
+      <radialGradient id="gEarth" cx="40%" cy="35%" r="75%">
+        <stop offset="0" stop-color="#60a5fa"/><stop offset="55%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e3a8a"/>
+      </radialGradient>
+      <radialGradient id="gSpace" cx="50%" cy="50%" r="70%">
+        <stop offset="0" stop-color="#0d1630"/><stop offset="100%" stop-color="#050912"/>
+      </radialGradient>
+    </defs>
+    <rect width="420" height="420" rx="16" fill="url(#gSpace)"/>
+    ${Array.from({length:26}).map(()=>`<circle cx="${Math.random()*420|0}" cy="${Math.random()*420|0}" r="${(Math.random()*1.6+.4).toFixed(1)}" fill="#e2e8f0" opacity="${(Math.random()*.6+.2).toFixed(2)}"/>`).join('')}
+    <circle class="orbit-ring" data-orb="leo" cx="210" cy="210" r="85"  fill="none" stroke="#38bdf8" stroke-width="1.6" stroke-dasharray="5 6"/>
+    <circle class="orbit-ring" data-orb="meo" cx="210" cy="210" r="132" fill="none" stroke="#a78bfa" stroke-width="1.6" stroke-dasharray="5 6"/>
+    <circle class="orbit-ring" data-orb="geo" cx="210" cy="210" r="180" fill="none" stroke="#34d399" stroke-width="1.6" stroke-dasharray="5 6"/>
+    <circle cx="210" cy="210" r="44" fill="url(#gEarth)" stroke="#38bdf8" stroke-width="1"/>
+    <ellipse cx="196" cy="198" rx="16" ry="10" fill="#34d399" opacity=".85" transform="rotate(-20 196 198)"/>
+    <ellipse cx="226" cy="228" rx="12" ry="8"  fill="#34d399" opacity=".8"/>
+    <text x="210" y="288" text-anchor="middle" font-size="10" fill="#94a3b8" font-family="Inter">🌎 Tierra</text>
+    <g class="sat-orbit" data-orb="leo" style="animation-duration:5s"><g transform="translate(210,125)"><rect x="-9" y="-5" width="18" height="10" rx="2" fill="#38bdf8"/><rect x="-19" y="-3" width="9" height="6" fill="#0ea5e9"/><rect x="10" y="-3" width="9" height="6" fill="#0ea5e9"/></g></g>
+    <g class="sat-orbit" data-orb="meo" style="animation-duration:11s"><g transform="translate(210,78)"><rect x="-9" y="-5" width="18" height="10" rx="2" fill="#a78bfa"/><rect x="-19" y="-3" width="9" height="6" fill="#8b5cf6"/><rect x="10" y="-3" width="9" height="6" fill="#8b5cf6"/></g></g>
+    <g class="sat-orbit" data-orb="geo" style="animation-duration:24s"><g transform="translate(210,30)"><rect x="-10" y="-6" width="20" height="12" rx="2" fill="#34d399"/><rect x="-21" y="-3.5" width="10" height="7" fill="#10b981"/><rect x="11" y="-3.5" width="10" height="7" fill="#10b981"/></g></g>
+    <text x="46" y="386" font-size="22">📡</text>
+    <line x1="60" y1="372" x2="180" y2="250" stroke="#fb7a1e" stroke-width="1.6" class="cable" opacity=".8"/>`;
+
+  function selectOrbit(orb){
+    const data = SAT_DATA[orb];
+    document.querySelectorAll('.orbit-ring').forEach(r=> r.classList.toggle('active', r.dataset.orb===orb));
+    document.querySelectorAll('.sat-btn').forEach(b=>{
+      const on = b.dataset.orb===orb;
+      b.classList.toggle('!border-sky-400', on);
+      b.classList.toggle('bg-sky-500/15', on);
+    });
+    const info = document.getElementById('satInfo');
+    info.innerHTML = `<div class="pop-in">
+      <h4 class="font-display font-extrabold text-lg" style="color:${data.color}">${data.name}</h4>
+      <ul class="text-xs text-slate-300 mt-2 space-y-1.5">
+        <li>🛰️ <b class="text-white">Altura:</b> ${data.alt}</li>
+        <li>⚡ <b class="text-white">Velocidad:</b> ${data.vel}</li>
+        <li>⏱️ <b class="text-white">Latencia:</b> ${data.lat}</li>
+        <li>🎯 <b class="text-white">Usos:</b> ${data.usos}</li>
+      </ul>
+      <p class="text-[.7rem] text-slate-400 mt-3 border-t border-slate-800 pt-2">💡 ${data.extra}</p>
+    </div>`;
+    if(!state.satSeen.includes(orb)){
+      state.satSeen.push(orb); saveState();
+      if(state.satSeen.length >= 3) completeSim('satOrbits','simulador orbital completo');
+    }
+  }
+  svg.querySelectorAll('.orbit-ring').forEach(r=> r.addEventListener('click', ()=> selectOrbit(r.dataset.orb)));
+  document.querySelectorAll('.sat-btn').forEach(b=> b.addEventListener('click', ()=> selectOrbit(b.dataset.orb)));
+}
+
+function initExpandables(){
+  document.querySelectorAll('.btn-more').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const more = btn.nextElementSibling;
+      const hidden = more.classList.toggle('hidden');
+      btn.innerHTML = hidden? 'Ver más <i class="fa-solid fa-chevron-down"></i>' : 'Ver menos <i class="fa-solid fa-chevron-up"></i>';
+      if(!hidden) more.classList.add('pop-in');
+    });
+  });
+}
+
+/* ---------- G) TEORÍA IMPRIMIBLE COMPLETA ---------- */
+
+/* Marca de clase de impresión: solo un área se imprime a la vez */
+function setPrintMode(mode){
+  document.body.classList.remove('print-report','print-theory');
+  if(mode) document.body.classList.add(mode);
+}
+
+function openTheory(){
+  closeReport();
+  renderTheoryChecks();
+  renderTheory();
+  document.getElementById('theoryWrap').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  setPrintMode('print-theory');
+}
+function closeTheory(){
+  const wrap = document.getElementById('theoryWrap');
+  if(wrap.classList.contains('hidden')) return;
+  wrap.classList.add('hidden');
+  document.body.style.overflow = '';
+  if(document.body.classList.contains('print-theory')) setPrintMode(null);
+}
+
+/* Checkboxes de selección de módulos (se crean una sola vez) */
+function renderTheoryChecks(){
+  const box = document.getElementById('theoryChecks');
+  if(box.dataset.ready) return;
+  box.innerHTML = MOD_ORDER.map((m,i)=>`
+    <label class="flex items-center gap-2 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs cursor-pointer hover:border-sky-400 transition">
+      <input type="checkbox" id="th-${m}" checked class="accent-sky-400" onchange="renderTheory()">
+      <span>${MODULES[m].emoji} <b>${i+1}. ${MODULES[m].name}</b></span>
+    </label>`).join('');
+  box.dataset.ready = '1';
+}
+
+function theoryAll(v){
+  MOD_ORDER.forEach(m=>{ const c=document.getElementById('th-'+m); if(c) c.checked=v; });
+  renderTheory();
+}
+
+/* Dibuja la teoría completa con LETRA AMPLIADA.
+   CLAVE: cada 3 módulos se agrega la clase .th-pagebreak, que fuerza
+   un salto de página al imprimir → exactamente 3 módulos por hoja A4. */
+function renderTheory(){
+  const sel = MOD_ORDER.filter(m=> document.getElementById('th-'+m) && document.getElementById('th-'+m).checked);
+  const area = document.getElementById('theoryArea');
+  const fecha = new Date().toLocaleDateString('es-AR');
+  const hojas = Math.ceil(sel.length/3);
+  area.innerHTML = `
+    <div class="th-head">
+      <b>📚 Desarrollo Teórico · NTiCx — 4to año (Secundaria, Argentina)</b>
+      <span>${fecha} · ${sel.length}/6 módulos${sel.length? ` · ${hojas} hoja${hojas>1?'s':''} A4 (3 módulos c/u)`:''}</span>
+    </div>
+    ${ sel.length
+      ? sel.map((m,i)=>{
+          const t = THEORY[m];
+          /* Salto de página forzado después del 3er, 6to… módulo (no tras el último) */
+          const pageBreak = (i % 3 === 2 && i < sel.length - 1) ? ' th-pagebreak' : '';
+          return `
+          <div class="th-mod${pageBreak}" style="--c:${MODULES[m].color}">
+            <h4 style="color:#0f172a">${MODULES[m].emoji} ${MODULES[m].name}</h4>
+            <div class="th-body">
+              <p><b class="lbl">▸ ¿Qué es?</b> ${t.q}</p>
+              <p><b class="lbl">▸ ¿Para qué sirve?</b> ${t.p}</p>
+              <p><b class="lbl">▸ ¿Cómo funciona?</b> ${t.f}</p>
+              <p class="ex"><b class="lbl">▸ Ejemplos cotidianos:</b> ${t.e}</p>
+            </div>
+          </div>`;
+        }).join('')
+      : '<p style="font-size:9pt;color:#64748b;padding:4mm;text-align:center">Marcá al menos un módulo para generar el resumen…</p>' }
+    <p class="rp-foot" style="margin-top:1mm;font-size:6.5pt">Estructura de cada módulo: ¿Qué es? → ¿Para qué sirve? → ¿Cómo funciona? → Ejemplos cotidianos. Material de estudio · TecnoRed NTiCx.</p>`;
+}
+
+/* ---------- H) REPORTE DE EVALUACIÓN (compacto) ---------- */
+function openReport(){
+  closeTheory();
+  buildReport();
+  document.getElementById('reportWrap').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  setPrintMode('print-report');
+}
+function closeReport(){
+  const wrap = document.getElementById('reportWrap');
+  if(wrap.classList.contains('hidden')) return;
+  wrap.classList.add('hidden');
+  document.body.style.overflow = '';
+  if(document.body.classList.contains('print-report')) setPrintMode(null);
+}
+
+/* Reporte COMPACTO: encabezado de 1 línea, datos en 2 filas,
+   por pregunta solo la opción elegida (✔/✘ y la correcta si falló). */
+function buildReport(){
+  const fecha = document.getElementById('rpFecha');
+  if(!fecha.value) fecha.value = new Date().toISOString().slice(0,10);
+  document.getElementById('rpFolio').textContent = 'Folio NT-' + Date.now().toString().slice(-6);
+
+  const L = i => String.fromCharCode(65 + i);
+  let html = '';
+
+  MOD_ORDER.forEach((m, mi)=>{
+    const meta = MODULES[m], quiz = QUIZZES[m], st = state.quiz[m] || { answers:{} };
+    const nAns = Object.keys(st.answers||{}).length;
+    const estado = st.done ? '✔ completado' : (nAns>0 ? `${nAns}/3 en curso` : 'pendiente');
+    html += `<div class="rp-mod">
+      <div class="rp-mod-h"><span>M${mi+1} · ${meta.emoji} ${meta.name}</span><span>${estado}</span></div>
+      <div class="rp-mod-b">`;
+    quiz.forEach((item, qi)=>{
+      const a = st.answers[qi];
+      html += `<div class="rp-q"><p>P${qi+1}. ${item.q}</p>`;
+      if(a){
+        html += a.ok
+          ? `<p class="rp-ok">▸ ${L(a.sel)}) ${item.opts[a.sel]} — ✔ correcta</p>`
+          : `<p class="rp-bad">▸ ${L(a.sel)}) ${item.opts[a.sel]} — ✘ · Correcta: ${L(item.ok)}) ${item.opts[item.ok]}</p>`;
+      }else{
+        html += `<p class="rp-na">▸ Sin responder</p>`;
+      }
+      html += `</div>`;
+    });
+    html += `</div></div>`;
+  });
+
+  document.getElementById('rpPreguntas').innerHTML = html;
+}
+
+/* Si el usuario imprime con Ctrl+P sin ningún modal abierto, abrimos el reporte */
+window.addEventListener('beforeprint', ()=>{
+  if(!document.body.classList.contains('print-theory') && !document.body.classList.contains('print-report')){
+    openReport();
+  }
+});
+
+/* ---------- INICIALIZACIÓN GENERAL ---------- */
+document.addEventListener('DOMContentLoaded', ()=>{
+  loadState();
+  renderModuleHeaders();
+  renderModuleNav();
+  renderHero();
+  initExpandables();
+  initNetDiagram();
+  initADConverter();
+  initArqSim();
+  initPacketSim();
+  initTelTimeline();
+  initSatSim();
+
+  MOD_ORDER.forEach(renderQuiz);
+
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> showTab(btn.dataset.tab));
+  });
+
+  document.addEventListener('keydown', e=>{
+    if(e.key === 'Escape'){ closeReport(); closeTheory(); }
+  });
+
+  updateHUD();
+  showTab('inicio');
+  setTimeout(()=> showToast('👋 ¡Bienvenido/a a TecnoRed! Empezá por el módulo 1.'), 700);
+});
+</script>
+</body>
+</html>
+
