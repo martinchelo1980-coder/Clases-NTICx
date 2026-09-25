@@ -10,4 +10,4 @@ Bienvenido al espacio de recursos interactivos. Haz clic en cualquiera de los si
 
 
 ---
-*Prof. Martín - Recursos Educativos Autocontenidos*
+Prof. Martín - Recursos Educativos Autocontenidos
