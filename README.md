@@ -1,5 +1,6 @@
 
 # 🏛️ Panel General de Clases - NTICx
+  Prof. Martín Espinosa
 
 Bienvenido al espacio de recursos interactivos. Haz clic en cualquiera de los siguientes enlaces directos para ingresar a la clase correspondiente:
 
