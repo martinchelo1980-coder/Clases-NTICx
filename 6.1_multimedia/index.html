@@ -1,0 +1,1745 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NTiCx Academy · Evaluación y Certificado PDF · 4to Año</title>
+<meta name="description" content="Web interactiva y gamificada para NTiCx (4to año, Argentina). Multimedia, nuevos lenguajes, formatos, hipermedia y evaluación final con exportación a PDF.">
+
+<!-- ============================================================
+     DEPENDENCIAS (CDN)
+     - Tailwind CSS ........ utilidades de estilo
+     - FontAwesome ......... iconografía (incluye marcas reales)
+     - Fontsource .......... tipografías modernas
+     - jsPDF ............... genera el PDF de la evaluación
+     ============================================================ -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/space-grotesk/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/jetbrains-mono/index.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+  tailwind.config = {
+    theme: { extend: {
+      fontFamily: {
+        display: ['"Space Grotesk Variable"','system-ui','sans-serif'],
+        sans:    ['"Inter Variable"','system-ui','sans-serif'],
+        mono:    ['"JetBrains Mono Variable"','monospace']
+      },
+      colors: {
+        'ed-dark':'#0f172a','ed-darker':'#020617','ed-card':'#1e293b','ed-border':'#334155',
+        'neon-cyan':'#22d3ee','neon-purple':'#c084fc','neon-lime':'#a3e635','neon-pink':'#f472b6','neon-amber':'#fbbf24'
+      },
+      letterSpacing:{ tightest:'-0.04em' }
+    }}
+  }
+</script>
+
+<style>
+:root{
+  --neon-cyan:#22d3ee; --neon-purple:#c084fc; --neon-lime:#a3e635;
+  --neon-pink:#f472b6; --neon-amber:#fbbf24;
+  --ed-dark:#0f172a; --ed-darker:#020617; --ed-card:#1e293b; --ed-border:#334155;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter Variable',system-ui,sans-serif;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(34,211,238,.10), transparent 60%),
+    radial-gradient(1000px 500px at 100% 0%, rgba(192,132,252,.10), transparent 55%),
+    linear-gradient(160deg,#020617 0%,#0f172a 55%,#020617 100%);
+  background-attachment:fixed; min-height:100vh;
+}
+h1,h2,h3,h4,.font-display{font-family:'Space Grotesk Variable',system-ui,sans-serif}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(34,211,238,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(34,211,238,.035) 1px,transparent 1px);
+  background-size:56px 56px;
+  mask-image:radial-gradient(circle at 50% 0%,#000 30%,transparent 85%);
+}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:#020617}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#22d3ee,#c084fc);border-radius:6px}
+.scrollbar-hide::-webkit-scrollbar{height:0;width:0}
+
+.glass{background:linear-gradient(180deg,rgba(30,41,59,.75),rgba(15,23,42,.75));backdrop-filter:blur(12px);border:1px solid rgba(51,65,85,.7)}
+.neon-hover{transition:.3s ease}
+.neon-hover:hover{border-color:rgba(34,211,238,.6);box-shadow:0 0 0 1px rgba(34,211,238,.25),0 12px 40px -12px rgba(34,211,238,.45);transform:translateY(-3px)}
+.text-gradient{background:linear-gradient(90deg,#22d3ee 0%,#c084fc 45%,#a3e635 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.progress-fill{background:linear-gradient(90deg,#22d3ee,#c084fc,#a3e635);box-shadow:0 0 14px rgba(34,211,238,.55);transition:width .9s cubic-bezier(.4,0,.2,1)}
+.tab-btn{position:relative;transition:.25s}
+.tab-btn::after{content:'';position:absolute;left:50%;bottom:0;height:2px;width:0;background:linear-gradient(90deg,#22d3ee,#c084fc);transition:.3s;transform:translateX(-50%)}
+.tab-btn:hover::after,.tab-btn.active::after{width:80%}
+.tab-btn.active{color:#22d3ee;background:rgba(34,211,238,.08)}
+
+.bar-fill{transition:width 1s cubic-bezier(.4,0,.2,1)}
+.donut-seg{transition:stroke-dasharray 1.1s cubic-bezier(.4,0,.2,1)}
+
+.flip-card{perspective:1200px;height:300px}
+.flip-inner{position:relative;width:100%;height:100%;transition:transform .8s cubic-bezier(.4,0,.2,1);transform-style:preserve-3d}
+.flip-card:hover .flip-inner,.flip-card.flipped .flip-inner{transform:rotateY(180deg)}
+.flip-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:1.1rem;overflow:hidden}
+.flip-back{transform:rotateY(180deg)}
+
+.tgl{position:relative;display:inline-block;width:56px;height:30px;flex:none}
+.tgl input{opacity:0;width:0;height:0}
+.tgl-slider{position:absolute;inset:0;background:#334155;border-radius:99px;transition:.35s;cursor:pointer}
+.tgl-slider::before{content:'';position:absolute;height:22px;width:22px;left:4px;bottom:4px;background:#fff;border-radius:50%;transition:.35s}
+.tgl input:checked + .tgl-slider{background:linear-gradient(90deg,#22d3ee,#c084fc);box-shadow:0 0 14px rgba(34,211,238,.5)}
+.tgl input:checked + .tgl-slider::before{transform:translateX(26px)}
+
+.layer-stack{perspective:900px}
+.layer{transition:.45s cubic-bezier(.4,0,.2,1);transform-style:preserve-3d}
+.layer:hover{filter:brightness(1.25)}
+.layer.off{opacity:.22;filter:grayscale(1)}
+
+.node{transition:.3s;cursor:pointer}
+.node:hover{transform:translate(-50%,-50%) scale(1.14)}
+.dash-line{stroke-dasharray:6 6;animation:dashmove 22s linear infinite}
+@keyframes dashmove{to{stroke-dashoffset:-240}}
+
+.hotspot{transition:.25s}
+.hotspot:hover{transform:scale(1.18)}
+.meme-zone{transition:.3s}
+.meme-zone.hl{box-shadow:0 0 0 3px var(--neon-lime),0 0 24px rgba(163,230,53,.55)}
+
+@keyframes slideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+@keyframes xpPop{0%{transform:scale(1)}45%{transform:scale(1.35)}100%{transform:scale(1)}}
+@keyframes pulseNeon{0%,100%{opacity:1}50%{opacity:.55}}
+.anim-slide{animation:slideUp .45s ease-out both}
+.anim-fade{animation:fadeIn .4s ease-out both}
+.anim-float{animation:floaty 3.4s ease-in-out infinite}
+.anim-pulse{animation:pulseNeon 2.2s ease-in-out infinite}
+.xp-pop{animation:xpPop .6s ease-out}
+
+.toast{position:relative;border-radius:.9rem;padding:.85rem 1.1rem;font-weight:700;box-shadow:0 18px 45px -12px rgba(0,0,0,.7);animation:slideUp .35s ease-out}
+.toast.out{animation:fadeOutUp .4s ease-in forwards}
+@keyframes fadeOutUp{to{opacity:0;transform:translateY(-18px)}}
+
+.medal{transition:.35s}
+.medal.locked{filter:grayscale(1) opacity(.32)}
+.medal.unlocked{animation:floaty 3.4s ease-in-out infinite}
+
+input[type=range]{-webkit-appearance:none;appearance:none;height:8px;border-radius:99px;background:linear-gradient(90deg,#22d3ee,#c084fc,#a3e635,#f472b6);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#0f172a;border:3px solid #22d3ee;box-shadow:0 0 14px rgba(34,211,238,.8);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#0f172a;border:3px solid #22d3ee;cursor:pointer}
+
+.field{width:100%;background:rgba(2,6,23,.6);border:1px solid #334155;border-radius:.75rem;padding:.65rem .85rem;color:#e2e8f0;font-size:.9rem;transition:.25s}
+.field:focus{outline:none;border-color:#22d3ee;box-shadow:0 0 0 3px rgba(34,211,238,.15)}
+.field::placeholder{color:#64748b}
+
+.opt{transition:.22s}
+.opt:hover:not(:disabled){border-color:#22d3ee;transform:translateX(4px)}
+.print-only{display:none}
+
+@media print{
+  .no-print,header nav,#tab-nav,#toast-wrap,.tgl,button,input,.hotspot,.modal-backdrop,#st-form{display:none !important}
+  html,body{background:#fff !important;color:#000 !important;font-size:10.5pt}
+  body::before{display:none !important}
+  *{color:#000 !important;background:#fff !important;box-shadow:none !important;text-shadow:none !important;border-color:#bbb !important;-webkit-print-color-adjust:exact}
+  .print-title{display:block !important;text-align:center;font-size:19pt;font-weight:800;border-bottom:3px double #000;padding-bottom:8px;margin-bottom:16px}
+  .tab-content{display:block !important;page-break-before:always;padding:0 4mm}
+  .tab-content:first-of-type{page-break-before:auto}
+  .glass,.flip-face,.card-print{border:1px solid #999 !important;page-break-inside:avoid}
+  .flip-card{height:auto !important}.flip-inner{transform:none !important;display:block}
+  .flip-face{position:relative !important;inset:auto !important;transform:none !important;margin-bottom:6px}
+  h2,h3,h4{page-break-after:avoid;border-bottom:1.5px solid #000;padding-bottom:3px;margin-top:14px}
+  .text-gradient{color:#000 !important}
+  a{text-decoration:underline !important}
+  .progress-fill{background:#333 !important}
+  .print-only{display:block !important}
+  @page{size:A4;margin:15mm}
+}
+</style>
+</head>
+
+<body class="text-slate-100 antialiased">
+
+<div class="print-title">
+  NTiCx · Nuevas Tecnologías de la Información y la Conectividad
+  <div style="font-size:11pt;font-weight:500">4to Año — Escuela Secundaria — República Argentina</div>
+</div>
+
+<!-- ============ HEADER ============ -->
+<header class="sticky top-0 z-40 glass border-b border-ed-border">
+  <div class="max-w-7xl mx-auto px-4 py-3">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-neon-cyan via-neon-purple to-neon-lime flex items-center justify-center">
+          <i class="fas fa-microchip text-xl text-ed-darker"></i>
+          <span class="absolute -inset-1 rounded-2xl border border-neon-cyan/40 anim-pulse"></span>
+        </div>
+        <div>
+          <h1 class="font-display text-xl md:text-2xl font-bold tracking-tightest text-gradient leading-none">NTiCx Academy</h1>
+          <p class="text-[11px] text-slate-400 mt-1">4to Año · Secundaria · Argentina</p>
+        </div>
+      </div>
+
+      <div id="header-actions" class="flex items-center gap-3 no-print">
+        <div id="st-chip" class="hidden xl:flex items-center gap-2 px-3 py-2 rounded-xl bg-ed-darker/60 border border-ed-border max-w-[200px]">
+          <i class="fas fa-user-graduate text-neon-cyan"></i>
+          <p id="st-chip-name" class="text-xs font-medium truncate text-slate-300">Sin identificar</p>
+        </div>
+        <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-ed-darker/60 border border-ed-border">
+          <i class="fas fa-bolt text-neon-lime"></i>
+          <div class="leading-none">
+            <p class="text-[9px] uppercase tracking-widest text-slate-400">Experiencia</p>
+            <p class="font-display text-lg font-bold text-neon-lime"><span id="xp-counter">0</span><span class="text-xs ml-1">XP</span></p>
+          </div>
+        </div>
+        <div class="hidden lg:flex items-center gap-1.5" id="header-medals" title="Tus medallas"></div>
+        <button id="print-btn" onclick="window.print()" class="px-3 py-2 rounded-xl bg-ed-darker/60 border border-ed-border hover:border-neon-cyan hover:text-neon-cyan transition" title="Imprimir en A4 (Ctrl+P)">
+          <i class="fas fa-print"></i><span class="hidden md:inline ml-2 text-sm">Imprimir A4</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="mt-3 no-print">
+      <div class="flex justify-between text-[11px] mb-1">
+        <span class="text-slate-400"><i class="fas fa-chart-line mr-1 text-neon-cyan"></i>Progreso del recorrido</span>
+        <span class="font-mono font-bold text-neon-cyan"><span id="progress-percent">0</span>%</span>
+      </div>
+      <div class="h-2 rounded-full bg-ed-darker border border-ed-border overflow-hidden">
+        <div id="progress-bar" class="progress-fill h-full rounded-full" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ NAV TABS ============ -->
+<nav id="tab-nav" class="sticky top-[132px] z-30 glass border-b border-ed-border no-print">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="flex gap-1 overflow-x-auto scrollbar-hide py-1">
+      <button class="tab-btn active flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap rounded-t-lg" data-tab="dashboard"><i class="fas fa-house"></i>Inicio</button>
+      <button class="tab-btn flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap rounded-t-lg" data-tab="multimedia"><i class="fas fa-photo-film"></i>Multimedia</button>
+      <button class="tab-btn flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap rounded-t-lg" data-tab="lenguajes"><i class="fas fa-language"></i>Nuevos Lenguajes</button>
+      <button class="tab-btn flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap rounded-t-lg" data-tab="formatos"><i class="fas fa-file-arrow-down"></i>Formatos</button>
+      <button class="tab-btn flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap rounded-t-lg" data-tab="hipermedia"><i class="fas fa-diagram-project"></i>Hipermedia</button>
+      <button class="tab-btn flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap rounded-t-lg" data-tab="evaluacion"><i class="fas fa-trophy"></i>Evaluación</button>
+    </div>
+  </div>
+</nav>
+
+<main class="max-w-7xl mx-auto px-4 py-8 relative z-10">
+
+<!-- ============ TAB 1 · DASHBOARD ============ -->
+<section id="tab-dashboard" class="tab-content anim-slide">
+  <div class="glass rounded-3xl p-6 md:p-10 mb-8 relative overflow-hidden">
+    <div class="absolute -right-20 -top-24 w-80 h-80 rounded-full bg-neon-purple/20 blur-3xl"></div>
+    <div class="absolute -left-16 -bottom-24 w-72 h-72 rounded-full bg-neon-cyan/20 blur-3xl"></div>
+    <div class="relative grid lg:grid-cols-[1.2fr_1fr] gap-8 items-center">
+      <div>
+        <span class="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-neon-lime/15 text-neon-lime border border-neon-lime/40 mb-4">
+          <i class="fas fa-circle text-[6px] anim-pulse"></i> Unidad activa · Gamificada
+        </span>
+        <h2 class="font-display text-4xl md:text-6xl font-bold tracking-tightest leading-[1.05] mb-4">
+          Aprendé <span class="text-gradient">NTiCx</span><br>jugando, explorando<br>y creando.
+        </h2>
+        <p class="text-slate-300 text-base md:text-lg mb-6 max-w-xl">
+          Un recorrido interactivo por la <strong class="text-white">multimedia</strong>, los <strong class="text-white">nuevos lenguajes digitales</strong>,
+          los <strong class="text-white">formatos de la información</strong> y la <strong class="text-white">hipermedia</strong>, con simuladores,
+          gráficos dinámicos, ejemplos de plataformas reales y una evaluación final que se exporta en <strong class="text-neon-lime">PDF</strong>.
+        </p>
+        <div class="flex flex-wrap gap-3">
+          <button onclick="switchTab('multimedia')" class="px-5 py-3 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-purple text-ed-darker font-bold hover:scale-105 transition"><i class="fas fa-rocket mr-2"></i>Comenzar recorrido</button>
+          <button onclick="switchTab('evaluacion')" class="px-5 py-3 rounded-xl border-2 border-neon-lime text-neon-lime font-bold hover:bg-neon-lime/10 transition"><i class="fas fa-file-pdf mr-2"></i>Evaluación + PDF</button>
+          <button onclick="document.getElementById('ctx-reales').scrollIntoView({behavior:'smooth'})" class="px-5 py-3 rounded-xl border border-ed-border text-slate-300 hover:border-neon-cyan hover:text-neon-cyan transition"><i class="fas fa-globe mr-2"></i>Ver páginas reales</button>
+        </div>
+      </div>
+      <div class="hidden lg:block">
+        <svg viewBox="0 0 400 340" class="w-full anim-float">
+          <defs>
+            <linearGradient id="gA" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#c084fc"/></linearGradient>
+            <radialGradient id="gB"><stop offset="0%" stop-color="#a3e635" stop-opacity=".9"/><stop offset="100%" stop-color="#a3e635" stop-opacity="0"/></radialGradient>
+          </defs>
+          <circle cx="200" cy="170" r="120" fill="url(#gB)" opacity=".25"/>
+          <g stroke="url(#gA)" stroke-width="2" fill="none" opacity=".65" class="dash-line">
+            <line x1="200" y1="170" x2="80" y2="70"/><line x1="200" y1="170" x2="320" y2="70"/>
+            <line x1="200" y1="170" x2="70" y2="250"/><line x1="200" y1="170" x2="330" y2="250"/>
+            <line x1="80" y1="70" x2="320" y2="70" stroke-dasharray="3 8"/><line x1="70" y1="250" x2="330" y2="250" stroke-dasharray="3 8"/>
+          </g>
+          <g font-family="Inter Variable, sans-serif" font-size="13" font-weight="700" text-anchor="middle">
+            <circle cx="200" cy="170" r="46" fill="#0f172a" stroke="#22d3ee" stroke-width="3"/>
+            <text x="200" y="166" fill="#22d3ee">NTiCx</text><text x="200" y="184" fill="#94a3b8" font-size="10">conectividad</text>
+            <circle cx="80" cy="70" r="34" fill="#0f172a" stroke="#c084fc" stroke-width="2.5"/>
+            <text x="80" y="66" fill="#c084fc">TXT</text><text x="80" y="84" fill="#cbd5e1" font-size="10">Texto</text>
+            <circle cx="320" cy="70" r="34" fill="#0f172a" stroke="#a3e635" stroke-width="2.5"/>
+            <text x="320" y="66" fill="#a3e635">AUD</text><text x="320" y="84" fill="#cbd5e1" font-size="10">Audio</text>
+            <circle cx="70" cy="250" r="34" fill="#0f172a" stroke="#f472b6" stroke-width="2.5"/>
+            <text x="70" y="246" fill="#f472b6">VID</text><text x="70" y="264" fill="#cbd5e1" font-size="10">Video</text>
+            <circle cx="330" cy="250" r="34" fill="#0f172a" stroke="#fbbf24" stroke-width="2.5"/>
+            <text x="330" y="246" fill="#fbbf24">IMG</text><text x="330" y="264" fill="#cbd5e1" font-size="10">Imagen</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="glass rounded-2xl p-5 neon-hover">
+      <div class="flex items-center justify-between mb-2"><i class="fas fa-bolt text-2xl text-neon-lime"></i><span class="text-[10px] uppercase tracking-widest text-slate-500">Total</span></div>
+      <p class="font-display text-3xl font-bold text-neon-lime"><span id="stat-xp">0</span></p><p class="text-xs text-slate-400 mt-1">Puntos de experiencia</p>
+    </div>
+    <div class="glass rounded-2xl p-5 neon-hover">
+      <div class="flex items-center justify-between mb-2"><i class="fas fa-medal text-2xl text-neon-purple"></i><span class="text-[10px] uppercase tracking-widest text-slate-500">Logros</span></div>
+      <p class="font-display text-3xl font-bold text-neon-purple"><span id="stat-medals">0</span><span class="text-lg text-slate-500">/6</span></p><p class="text-xs text-slate-400 mt-1">Medallas desbloqueadas</p>
+    </div>
+    <div class="glass rounded-2xl p-5 neon-hover">
+      <div class="flex items-center justify-between mb-2"><i class="fas fa-book-open text-2xl text-neon-cyan"></i><span class="text-[10px] uppercase tracking-widest text-slate-500">Módulos</span></div>
+      <p class="font-display text-3xl font-bold text-neon-cyan"><span id="stat-tabs">0</span><span class="text-lg text-slate-500">/5</span></p><p class="text-xs text-slate-400 mt-1">Pestañas exploradas</p>
+    </div>
+    <div class="glass rounded-2xl p-5 neon-hover">
+      <div class="flex items-center justify-between mb-2"><i class="fas fa-star text-2xl text-neon-pink"></i><span class="text-[10px] uppercase tracking-widest text-slate-500">Trivia</span></div>
+      <p class="font-display text-3xl font-bold text-neon-pink"><span id="stat-trivia">0</span><span class="text-lg text-slate-500">/5</span></p><p class="text-xs text-slate-400 mt-1">Respuestas correctas</p>
+    </div>
+  </div>
+
+  <div class="grid lg:grid-cols-2 gap-6 mb-8">
+    <div class="glass rounded-2xl p-6">
+      <h3 class="font-display text-xl font-bold mb-1 flex items-center gap-2"><i class="fas fa-chart-simple text-neon-cyan"></i>¿Cuánto tiempo pasás conectado/a?</h3>
+      <p class="text-xs text-slate-400 mb-5">Promedio diario estimado en adolescentes (horas por día)</p>
+      <div id="chart-uso" class="space-y-3"></div>
+    </div>
+    <div class="glass rounded-2xl p-6">
+      <h3 class="font-display text-xl font-bold mb-1 flex items-center gap-2"><i class="fas fa-chart-pie text-neon-purple"></i>¿Qué hay en tu feed?</h3>
+      <p class="text-xs text-slate-400 mb-5">Reparto aproximado de formatos en redes sociales</p>
+      <div class="flex flex-col sm:flex-row items-center gap-6"><div id="chart-feed"></div><div id="legend-feed" class="space-y-2 text-sm w-full"></div></div>
+    </div>
+  </div>
+
+  <div class="glass rounded-2xl p-6 mb-8">
+    <h3 class="font-display text-xl font-bold mb-1 flex items-center gap-2"><i class="fas fa-trophy text-neon-lime"></i>Tus logros</h3>
+    <p class="text-xs text-slate-400 mb-5">Completá actividades para desbloquear las 6 medallas del curso.</p>
+    <div id="medals-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"></div>
+  </div>
+
+  <div id="ctx-reales" class="glass rounded-2xl p-6 mb-8">
+    <div class="flex flex-wrap items-end justify-between gap-3 mb-2">
+      <div>
+        <h3 class="font-display text-xl font-bold flex items-center gap-2"><i class="fas fa-globe text-neon-cyan"></i>Contextos reales: plataformas que usás todos los días</h3>
+        <p class="text-xs text-slate-400 mt-1">Cada plataforma es un ejemplo vivo de multimedia, nuevos lenguajes, formatos e hipermedia. Hacé clic para analizarla.</p>
+      </div>
+      <span class="text-[11px] px-3 py-1 rounded-full bg-neon-lime/15 text-neon-lime border border-neon-lime/40"><i class="fas fa-medal mr-1"></i>Explorá 3 y ganá una medalla</span>
+    </div>
+    <div id="ctx-filters" class="flex flex-wrap gap-2 my-5 no-print"></div>
+    <div id="ctx-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+    <div class="print-only" id="ctx-print"></div>
+  </div>
+
+  <div class="glass rounded-2xl p-6">
+    <h3 class="font-display text-xl font-bold mb-4 flex items-center gap-2"><i class="fas fa-route text-neon-pink"></i>¿Cómo se usa esta web?</h3>
+    <div class="grid md:grid-cols-4 gap-4">
+      <div class="p-4 rounded-xl bg-ed-darker/50 border border-ed-border"><div class="w-9 h-9 rounded-lg bg-neon-cyan/20 flex items-center justify-center mb-3 font-display font-bold text-neon-cyan">1</div><h4 class="font-bold text-sm mb-1">Explorá las pestañas</h4><p class="text-xs text-slate-400">Cada módulo tiene su pestaña con teoría, gráficos y simuladores.</p></div>
+      <div class="p-4 rounded-xl bg-ed-darker/50 border border-ed-border"><div class="w-9 h-9 rounded-lg bg-neon-purple/20 flex items-center justify-center mb-3 font-display font-bold text-neon-purple">2</div><h4 class="font-bold text-sm mb-1">Interactuá</h4><p class="text-xs text-slate-400">Activá capas, tocá nodos, filtrá plataformas y usá el asistente de formatos.</p></div>
+      <div class="p-4 rounded-xl bg-ed-darker/50 border border-ed-border"><div class="w-9 h-9 rounded-lg bg-neon-lime/20 flex items-center justify-center mb-3 font-display font-bold text-neon-lime">3</div><h4 class="font-bold text-sm mb-1">Sumá XP y medallas</h4><p class="text-xs text-slate-400">Cada actividad completada suma experiencia y desbloquea logros.</p></div>
+      <div class="p-4 rounded-xl bg-ed-darker/50 border border-ed-border"><div class="w-9 h-9 rounded-lg bg-neon-pink/20 flex items-center justify-center mb-3 font-display font-bold text-neon-pink">4</div><h4 class="font-bold text-sm mb-1">Evaluá y exportá</h4><p class="text-xs text-slate-400">Completá tus datos, respondé la trivia y descargá el informe en PDF.</p></div>
+    </div>
+    <div class="mt-5 flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl bg-ed-darker/70 border border-neon-cyan/30">
+      <p class="font-mono text-xs text-slate-300"><i class="fas fa-terminal mr-1 text-neon-cyan"></i>Probá en la consola (F12): <span class="text-neon-lime">AppState</span> · <span class="text-neon-lime">addXP(10,'prueba')</span> · <span class="text-neon-lime">switchTab('formatos')</span></p>
+      <button onclick="resetProgress()" class="text-xs px-3 py-2 rounded-lg border border-ed-border text-slate-400 hover:border-neon-pink hover:text-neon-pink transition no-print"><i class="fas fa-eraser mr-1"></i>Reiniciar mi progreso</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TAB 2 · MULTIMEDIA ============ -->
+<section id="tab-multimedia" class="tab-content hidden">
+  <header class="mb-8">
+    <p class="text-xs uppercase tracking-[.25em] text-neon-cyan mb-2">Módulo 01</p>
+    <h2 class="font-display text-3xl md:text-5xl font-bold tracking-tightest mb-3">Concepto de <span class="text-gradient">Multimedia</span></h2>
+    <p class="text-slate-300 text-lg max-w-4xl"><strong class="text-white">Multimedia</strong> = <em>multi</em> (muchos) + <em>media</em> (medios): la <strong class="text-neon-cyan">integración simultánea</strong> de texto, imagen, audio, video y animación en un mismo soporte digital, generalmente interactivo.</p>
+  </header>
+
+  <div class="grid lg:grid-cols-2 gap-6 mb-8">
+    <div class="glass rounded-2xl p-6">
+      <h3 class="font-display text-xl font-bold mb-4 text-neon-cyan"><i class="fas fa-book mr-2"></i>Los componentes</h3>
+      <div id="comp-list" class="space-y-3"></div>
+      <div class="mt-5 p-4 rounded-xl bg-neon-purple/10 border border-neon-purple/40 text-sm">
+        <p class="font-bold text-neon-purple mb-1"><i class="fas fa-lightbulb mr-1"></i>Regla de oro</p>
+        <p class="text-slate-300">Para que algo sea <strong>multimedia</strong> debe combinar <strong>al menos dos</strong> medios. Un .txt suelto <em>no</em> es multimedia.</p>
+      </div>
+    </div>
+    <div class="glass rounded-2xl p-6">
+      <h3 class="font-display text-xl font-bold mb-1 text-neon-purple"><i class="fas fa-layer-group mr-2"></i>Diagrama de capas</h3>
+      <p class="text-xs text-slate-400 mb-4">Las capas se apilan para construir la experiencia. <strong class="text-neon-cyan">Hacé clic en una capa</strong> para activarla (se sincroniza con el simulador).</p>
+      <div class="layer-stack relative h-[290px] flex items-center justify-center">
+        <div class="relative w-[260px] h-[260px]" style="transform-style:preserve-3d">
+          <div class="layer absolute inset-0 rounded-2xl border-2 border-neon-pink/70 bg-neon-pink/15 flex items-center justify-center" data-layer="video" style="transform:rotateX(52deg) rotateZ(-42deg) translateZ(96px)"><span class="font-display font-bold text-neon-pink" style="transform:rotateZ(42deg) rotateX(-52deg)"><i class="fas fa-video mr-1"></i>VIDEO</span></div>
+          <div class="layer absolute inset-0 rounded-2xl border-2 border-neon-lime/70 bg-neon-lime/15 flex items-center justify-center" data-layer="audio" style="transform:rotateX(52deg) rotateZ(-42deg) translateZ(64px)"><span class="font-display font-bold text-neon-lime" style="transform:rotateZ(42deg) rotateX(-52deg)"><i class="fas fa-music mr-1"></i>AUDIO</span></div>
+          <div class="layer absolute inset-0 rounded-2xl border-2 border-neon-purple/70 bg-neon-purple/15 flex items-center justify-center" data-layer="imagen" style="transform:rotateX(52deg) rotateZ(-42deg) translateZ(32px)"><span class="font-display font-bold text-neon-purple" style="transform:rotateZ(42deg) rotateX(-52deg)"><i class="fas fa-image mr-1"></i>IMAGEN</span></div>
+          <div class="layer absolute inset-0 rounded-2xl border-2 border-neon-cyan/70 bg-neon-cyan/15 flex items-center justify-center" data-layer="texto" style="transform:rotateX(52deg) rotateZ(-42deg) translateZ(0)"><span class="font-display font-bold text-neon-cyan" style="transform:rotateZ(42deg) rotateX(-52deg)"><i class="fas fa-font mr-1"></i>TEXTO</span></div>
+        </div>
+      </div>
+      <p class="text-center text-xs text-slate-400 mt-2">Base: texto → se suman imagen, audio y video</p>
+    </div>
+  </div>
+
+  <div class="glass rounded-2xl p-6 mb-8">
+    <div class="flex flex-wrap items-end justify-between gap-3 mb-5">
+      <div>
+        <h3 class="font-display text-2xl font-bold flex items-center gap-2"><i class="fas fa-flask text-neon-lime"></i>Simulador multimedia</h3>
+        <p class="text-sm text-slate-400 mt-1">Armá tu contenido combinando medios y observá qué tipo de multimedia obtenés.</p>
+      </div>
+      <span id="sim-badge" class="text-xs font-bold px-3 py-1.5 rounded-full bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/40">Multimedia básica</span>
+    </div>
+    <div class="grid lg:grid-cols-[320px_1fr] gap-6">
+      <div class="space-y-3 no-print">
+        <label class="flex items-center justify-between p-3 rounded-xl bg-ed-darker/60 border border-ed-border hover:border-neon-cyan/50 transition cursor-pointer">
+          <span class="flex items-center gap-3"><i class="fas fa-font w-5 text-neon-cyan"></i><span class="font-medium text-sm">Texto</span></span>
+          <span class="tgl"><input type="checkbox" id="tg-texto" checked><span class="tgl-slider"></span></span></label>
+        <label class="flex items-center justify-between p-3 rounded-xl bg-ed-darker/60 border border-ed-border hover:border-neon-purple/50 transition cursor-pointer">
+          <span class="flex items-center gap-3"><i class="fas fa-image w-5 text-neon-purple"></i><span class="font-medium text-sm">Imagen</span></span>
+          <span class="tgl"><input type="checkbox" id="tg-imagen" checked><span class="tgl-slider"></span></span></label>
+        <label class="flex items-center justify-between p-3 rounded-xl bg-ed-darker/60 border border-ed-border hover:border-neon-lime/50 transition cursor-pointer">
+          <span class="flex items-center gap-3"><i class="fas fa-music w-5 text-neon-lime"></i><span class="font-medium text-sm">Audio</span></span>
+          <span class="tgl"><input type="checkbox" id="tg-audio"><span class="tgl-slider"></span></span></label>
+        <label class="flex items-center justify-between p-3 rounded-xl bg-ed-darker/60 border border-ed-border hover:border-neon-pink/50 transition cursor-pointer">
+          <span class="flex items-center gap-3"><i class="fas fa-video w-5 text-neon-pink"></i><span class="font-medium text-sm">Video</span></span>
+          <span class="tgl"><input type="checkbox" id="tg-video"><span class="tgl-slider"></span></span></label>
+        <div class="p-4 rounded-xl bg-ed-darker/60 border border-ed-border">
+          <p class="text-xs text-slate-400 mb-2">Medios activos</p>
+          <div class="flex gap-1.5 mb-3" id="sim-dots"></div>
+          <div class="h-2 rounded-full bg-ed-dark border border-ed-border overflow-hidden"><div id="sim-richness" class="progress-fill h-full" style="width:50%"></div></div>
+          <p class="text-[11px] text-slate-500 mt-2">Riqueza comunicacional: <span id="sim-rich-txt" class="text-neon-lime font-mono">50%</span></p>
+        </div>
+        <button id="btn-sim-done" class="w-full py-3 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-purple text-ed-darker font-bold hover:scale-[1.03] transition"><i class="fas fa-check-double mr-2"></i>Completar simulador (+15 XP)</button>
+      </div>
+      <div class="bg-ed-darker rounded-2xl border-2 border-ed-border p-4">
+        <div class="flex items-center gap-1.5 mb-3">
+          <span class="w-3 h-3 rounded-full bg-red-500/70"></span><span class="w-3 h-3 rounded-full bg-amber-400/70"></span><span class="w-3 h-3 rounded-full bg-lime-400/70"></span>
+          <p class="ml-2 text-[11px] text-slate-500 font-mono">preview · mi-trabajo-multimedia.nticx</p>
+        </div>
+        <div id="sc-texto" class="mb-3 p-4 rounded-xl bg-ed-card border border-ed-border">
+          <h4 class="font-display font-bold text-neon-cyan text-lg">La vida en la era digital</h4>
+          <p class="text-sm text-slate-300 mt-1 leading-relaxed">Hoy producimos y consumimos información todo el tiempo. Cada posteo combina palabras, imágenes y sonido en un mismo mensaje: eso es multimedia.</p>
+        </div>
+        <div id="sc-imagen" class="mb-3 rounded-xl overflow-hidden border border-neon-purple/40">
+          <svg viewBox="0 0 640 260" class="w-full block">
+            <defs><linearGradient id="sky" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1e1b4b"/><stop offset="55%" stop-color="#0f172a"/><stop offset="100%" stop-color="#042f2e"/></linearGradient>
+            <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f472b6"/><stop offset="100%" stop-color="#c084fc"/></linearGradient></defs>
+            <rect width="640" height="260" fill="url(#sky)"/><circle cx="470" cy="90" r="52" fill="url(#sun)" opacity=".9"/>
+            <g opacity=".55" stroke="#22d3ee" stroke-width="1" fill="none"><path d="M0 200 Q160 150 320 200 T640 190"/><path d="M0 225 Q160 180 320 225 T640 215"/></g>
+            <polygon points="60,260 170,120 280,260" fill="#0b1220" stroke="#22d3ee" stroke-width="1.5"/>
+            <polygon points="230,260 330,150 430,260" fill="#0b1220" stroke="#a3e635" stroke-width="1.5"/>
+            <g fill="#22d3ee" opacity=".8"><circle cx="80" cy="50" r="1.8"/><circle cx="150" cy="30" r="1.4"/><circle cx="250" cy="60" r="1.6"/><circle cx="360" cy="35" r="1.3"/><circle cx="560" cy="45" r="1.7"/><circle cx="600" cy="120" r="1.4"/></g>
+            <text x="24" y="244" font-family="JetBrains Mono Variable, monospace" font-size="12" fill="#94a3b8">imagen.svg · 640x260 · grafico vectorial</text>
+          </svg>
+        </div>
+        <div id="sc-audio" class="hidden mb-3 p-4 rounded-xl bg-neon-lime/10 border border-neon-lime/40">
+          <div class="flex items-center gap-3">
+            <button class="w-11 h-11 rounded-full bg-neon-lime text-ed-darker flex items-center justify-center hover:scale-110 transition" id="btn-play"><i class="fas fa-play"></i></button>
+            <div class="flex-1"><p class="text-xs font-bold text-neon-lime">audio.mp3 · 00:12 / 03:24</p>
+            <svg id="wave" viewBox="0 0 300 40" class="w-full h-10 mt-1" preserveAspectRatio="none"></svg></div>
+          </div>
+        </div>
+        <div id="sc-video" class="hidden rounded-xl overflow-hidden border border-neon-pink/40 bg-black">
+          <div class="relative aspect-video flex items-center justify-center bg-gradient-to-br from-ed-darker via-[#111827] to-ed-darker">
+            <div class="absolute inset-0 opacity-40" style="background:radial-gradient(circle at 30% 40%,rgba(34,211,238,.4),transparent 45%),radial-gradient(circle at 70% 60%,rgba(244,114,182,.4),transparent 45%)"></div>
+            <button id="btn-vid" class="relative w-20 h-20 rounded-full bg-neon-pink/90 text-ed-darker flex items-center justify-center text-3xl hover:scale-110 transition shadow-[0_0_40px_rgba(244,114,182,.6)]"><i class="fas fa-play"></i></button>
+            <div class="absolute bottom-0 left-0 right-0 p-3">
+              <div class="h-1.5 rounded-full bg-white/20 overflow-hidden"><div id="vid-bar" class="h-full bg-neon-pink" style="width:0%"></div></div>
+              <p class="text-[11px] text-slate-300 mt-2 font-mono">video.mp4 · 1920x1080 · 30 fps</p>
+            </div>
+            <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-1 rounded bg-red-600 text-white">REC</span>
+          </div>
+        </div>
+        <div id="sc-empty" class="hidden text-center py-16 text-slate-500"><i class="fas fa-power-off text-4xl mb-3"></i><p class="text-sm">Sin medios activos: no hay contenido multimedia.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid lg:grid-cols-[1.1fr_1fr] gap-6">
+    <div class="glass rounded-2xl p-6">
+      <h3 class="font-display text-xl font-bold mb-1"><i class="fas fa-brain text-neon-pink mr-2"></i>¿Por qué usar multimedia?</h3>
+      <p class="text-xs text-slate-400 mb-5">Retención estimada según la cantidad de medios combinados</p>
+      <div id="chart-retencion" class="space-y-3"></div>
+    </div>
+    <div class="glass rounded-2xl p-6">
+      <h3 class="font-display text-xl font-bold mb-4"><i class="fas fa-puzzle-piece text-neon-lime mr-2"></i>Multimedia en contextos reales</h3>
+      <div id="mm-casos" class="space-y-3"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TAB 3 · NUEVOS LENGUAJES ============ -->
+<section id="tab-lenguajes" class="tab-content hidden">
+  <header class="mb-8">
+    <p class="text-xs uppercase tracking-[.25em] text-neon-purple mb-2">Módulo 02</p>
+    <h2 class="font-display text-3xl md:text-5xl font-bold tracking-tightest mb-3">Nuevos <span class="text-gradient">Lenguajes</span> Digitales</h2>
+    <p class="text-slate-300 text-lg max-w-4xl">No cambió solo la tecnología: cambió la <strong class="text-white">forma de narrar</strong>. Hoy comunicamos con imágenes que duran segundos, audios que reemplazan llamadas, hilos que reemplazan ensayos y mundos que se cuentan en varias plataformas a la vez.</p>
+  </header>
+  <div id="lang-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8"></div>
+  <div class="glass rounded-2xl p-6 mb-8">
+    <h3 class="font-display text-xl font-bold mb-1"><i class="fas fa-timeline text-neon-cyan mr-2"></i>Línea de tiempo: evolución de los lenguajes</h3>
+    <p class="text-xs text-slate-400 mb-5">Deslizá horizontalmente para recorrer 35 años de cambios.</p>
+    <div class="overflow-x-auto scrollbar-hide pb-3"><div id="timeline" class="flex gap-4 min-w-max"></div></div>
+  </div>
+  <div class="grid lg:grid-cols-2 gap-6 mb-8">
+    <div class="glass rounded-2xl p-6">
+      <h3 class="font-display text-xl font-bold mb-1"><i class="fas fa-face-laugh-squint text-neon-lime mr-2"></i>Anatomía de un meme</h3>
+      <p class="text-xs text-slate-400 mb-4">Pasá el mouse (o tocá) los números para identificar cada parte del lenguaje memético.</p>
+      <div class="relative rounded-2xl overflow-hidden border-2 border-ed-border bg-ed-darker">
+        <div id="zone-top" class="meme-zone p-3 text-center font-display font-bold uppercase text-xl tracking-wide bg-ed-card">cuando rendís el TP</div>
+        <div id="zone-img" class="meme-zone relative h-44 flex items-center justify-center" style="background:linear-gradient(135deg,#1e293b,#0f172a)">
+          <svg viewBox="0 0 200 140" class="h-full">
+            <circle cx="100" cy="60" r="34" fill="#22d3ee" opacity=".25"/><circle cx="100" cy="52" r="16" fill="#c084fc"/>
+            <path d="M70 105 q30 -32 60 0 z" fill="#c084fc"/><circle cx="93" cy="50" r="3" fill="#0f172a"/><circle cx="107" cy="50" r="3" fill="#0f172a"/>
+            <path d="M92 62 q8 8 16 0" stroke="#0f172a" stroke-width="2.5" fill="none"/>
+          </svg>
+          <span id="zone-wm" class="meme-zone absolute bottom-2 right-2 text-[10px] font-mono text-slate-400 bg-black/40 px-2 py-0.5 rounded">@nticx.academy</span>
+        </div>
+        <div id="zone-bottom" class="meme-zone p-3 text-center font-display font-bold uppercase text-xl tracking-wide bg-ed-card text-neon-lime">y la profe lo sube al aula virtual</div>
+        <div class="hotspot absolute top-2 left-2 w-7 h-7 rounded-full bg-neon-lime text-ed-darker font-bold text-sm flex items-center justify-center cursor-pointer" data-zone="zone-top" data-info="Texto superior (setup): plantea la situacion. Suele ir en mayusculas para imitar el formato clasico.">1</div>
+        <div class="hotspot absolute top-1/2 left-2 w-7 h-7 rounded-full bg-neon-cyan text-ed-darker font-bold text-sm flex items-center justify-center cursor-pointer" data-zone="zone-img" data-info="Imagen base o plantilla: foto, ilustracion o GIF reutilizable. El mismo molde sirve para miles de memes distintos.">2</div>
+        <div class="hotspot absolute bottom-2 left-2 w-7 h-7 rounded-full bg-neon-pink text-ed-darker font-bold text-sm flex items-center justify-center cursor-pointer" data-zone="zone-bottom" data-info="Texto inferior (punchline): el remate. La gracia nace del contraste entre las dos frases y la imagen.">3</div>
+        <div class="hotspot absolute bottom-2 right-2 w-7 h-7 rounded-full bg-neon-amber text-ed-darker font-bold text-sm flex items-center justify-center cursor-pointer" data-zone="zone-wm" data-info="Marca de agua / autoria: identifica quien lo creo. En NTiCx hablamos de derechos de autor y de citar fuentes.">4</div>
+      </div>
+      <div id="meme-info" class="mt-3 p-3 rounded-xl bg-neon-lime/10 border border-neon-lime/40 text-sm text-slate-200 min-h-[56px]"><i class="fas fa-hand-pointer text-neon-lime mr-1"></i>Explorá los números para descubrir cómo se construye el significado.</div>
+    </div>
+    <div class="glass rounded-2xl p-6">
+      <h3 class="font-display text-xl font-bold mb-1"><i class="fas fa-diagram-project text-neon-purple mr-2"></i>Narrativa transmedia</h3>
+      <p class="text-xs text-slate-400 mb-2">Una misma historia se expande en varias plataformas y <strong>cada una aporta algo nuevo</strong>. Tocá los nodos.</p>
+      <svg viewBox="0 0 420 300" class="w-full">
+        <defs><linearGradient id="tg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c084fc"/><stop offset="100%" stop-color="#22d3ee"/></linearGradient></defs>
+        <g stroke="url(#tg1)" stroke-width="2" fill="none" class="dash-line" opacity=".8">
+          <line x1="210" y1="150" x2="80" y2="60"/><line x1="210" y1="150" x2="340" y2="60"/><line x1="210" y1="150" x2="60" y2="215"/><line x1="210" y1="150" x2="210" y2="265"/><line x1="210" y1="150" x2="360" y2="215"/>
+        </g>
+        <g text-anchor="middle" font-family="Inter Variable, sans-serif" font-size="11" font-weight="700">
+          <circle cx="210" cy="150" r="44" fill="#0f172a" stroke="#a3e635" stroke-width="3"/><text x="210" y="146" fill="#a3e635" font-size="13">Historia</text><text x="210" y="163" fill="#94a3b8" font-size="9">nucleo</text>
+          <g class="tx-node" data-info="Cine / serie: presenta el mundo y los personajes principales." style="cursor:pointer"><circle cx="80" cy="60" r="30" fill="#0f172a" stroke="#f472b6" stroke-width="2.5"/><text x="80" y="64" fill="#f472b6" font-size="14">CINE</text></g>
+          <g class="tx-node" data-info="Videojuego: el fan juega la historia y toma decisiones dentro del universo." style="cursor:pointer"><circle cx="340" cy="60" r="30" fill="#0f172a" stroke="#22d3ee" stroke-width="2.5"/><text x="340" y="64" fill="#22d3ee" font-size="13">JUEGO</text></g>
+          <g class="tx-node" data-info="Redes sociales: los personajes tienen cuentas propias y hablan con la audiencia en tiempo real." style="cursor:pointer"><circle cx="60" cy="215" r="30" fill="#0f172a" stroke="#c084fc" stroke-width="2.5"/><text x="60" y="219" fill="#c084fc" font-size="13">REDES</text></g>
+          <g class="tx-node" data-info="Comic / novela: profundiza la historia de personajes secundarios." style="cursor:pointer"><circle cx="210" cy="265" r="30" fill="#0f172a" stroke="#fbbf24" stroke-width="2.5"/><text x="210" y="269" fill="#fbbf24" font-size="13">COMIC</text></g>
+          <g class="tx-node" data-info="Podcast / musica: amplia el clima emocional y cuenta lo que no se ve." style="cursor:pointer"><circle cx="360" cy="215" r="30" fill="#0f172a" stroke="#a3e635" stroke-width="2.5"/><text x="360" y="219" fill="#a3e635" font-size="12">PODCAST</text></g>
+        </g>
+      </svg>
+      <div id="tx-info" class="p-3 rounded-xl bg-neon-purple/10 border border-neon-purple/40 text-sm text-slate-200 min-h-[52px]"><i class="fas fa-circle-info text-neon-purple mr-1"></i>Ejemplos reales: universos de superhéroes, sagas de streaming, campañas con QR y filtros de AR.</div>
+    </div>
+  </div>
+  <div class="glass rounded-2xl p-6 mb-8">
+    <h3 class="font-display text-xl font-bold mb-1"><i class="fas fa-stopwatch text-neon-amber mr-2"></i>Duración típica del contenido por plataforma</h3>
+    <p class="text-xs text-slate-400 mb-5">Cuanto más corto el formato, más visual y más gancho inicial necesita.</p>
+    <div id="chart-duracion" class="space-y-3"></div>
+  </div>
+  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="glass rounded-2xl p-5 neon-hover text-center"><i class="fas fa-bolt text-3xl text-neon-lime mb-2"></i><h4 class="font-bold">Inmediatez</h4><p class="text-xs text-slate-400 mt-1">Se produce y consume en segundos.</p></div>
+    <div class="glass rounded-2xl p-5 neon-hover text-center"><i class="fas fa-share-nodes text-3xl text-neon-cyan mb-2"></i><h4 class="font-bold">Viralidad</h4><p class="text-xs text-slate-400 mt-1">Cualquiera puede redistribuirlo.</p></div>
+    <div class="glass rounded-2xl p-5 neon-hover text-center"><i class="fas fa-comments text-3xl text-neon-purple mb-2"></i><h4 class="font-bold">Participación</h4><p class="text-xs text-slate-400 mt-1">El receptor también es autor (prosumidor).</p></div>
+    <div class="glass rounded-2xl p-5 neon-hover text-center"><i class="fas fa-layer-group text-3xl text-neon-pink mb-2"></i><h4 class="font-bold">Multimodal</h4><p class="text-xs text-slate-400 mt-1">Mezcla imagen, texto, audio y movimiento.</p></div>
+  </div>
+</section>
+
+<!-- ============ TAB 4 · FORMATOS ============ -->
+<section id="tab-formatos" class="tab-content hidden">
+  <header class="mb-8">
+    <p class="text-xs uppercase tracking-[.25em] text-neon-lime mb-2">Módulo 03</p>
+    <h2 class="font-display text-3xl md:text-5xl font-bold tracking-tightest mb-3">Formatos de la <span class="text-gradient">Información</span></h2>
+    <p class="text-slate-300 text-lg max-w-4xl">La <strong class="text-white">extensión</strong> de un archivo (.mp3, .png, .pdf) le indica al sistema <strong class="text-neon-cyan">cómo está codificada la información</strong> y con qué programas abrirla. Elegir bien define calidad, peso y compatibilidad.</p>
+  </header>
+  <div id="format-cards" class="grid sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8"></div>
+  <div class="grid lg:grid-cols-2 gap-6 mb-8">
+    <div class="glass rounded-2xl p-6">
+      <h3 class="font-display text-xl font-bold mb-1"><i class="fas fa-weight-hanging text-neon-cyan mr-2"></i>Compresión: mismo contenido, distinto peso</h3>
+      <p class="text-xs text-slate-400 mb-4">Elegí un tipo de contenido y compará cuánto ocupa según el formato.</p>
+      <div class="flex flex-wrap gap-2 mb-5 no-print" id="size-tabs"></div>
+      <div id="chart-peso" class="space-y-3"></div>
+    </div>
+    <div class="glass rounded-2xl p-6">
+      <h3 class="font-display text-xl font-bold mb-1"><i class="fas fa-wand-magic-sparkles text-neon-purple mr-2"></i>Asistente: ¿qué formato necesito?</h3>
+      <p class="text-xs text-slate-400 mb-4">Respondé las preguntas y te recomendamos el formato adecuado.</p>
+      <div id="decider" class="min-h-[220px]"></div>
+    </div>
+  </div>
+  <div class="glass rounded-2xl p-6">
+    <h3 class="font-display text-xl font-bold mb-1"><i class="fas fa-table-list text-neon-pink mr-2"></i>Extensiones en la vida real</h3>
+    <p class="text-xs text-slate-400 mb-4">¿Dónde te cruzás con cada formato sin darte cuenta?</p>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead><tr class="border-b border-ed-border text-left text-[11px] uppercase tracking-wider text-slate-400"><th class="py-2 px-3">Extensión</th><th class="py-2 px-3">Tipo</th><th class="py-2 px-3">Compresión</th><th class="py-2 px-3">Contexto real</th></tr></thead>
+        <tbody id="ext-table"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TAB 5 · HIPERMEDIA ============ -->
+<section id="tab-hipermedia" class="tab-content hidden">
+  <header class="mb-8">
+    <p class="text-xs uppercase tracking-[.25em] text-neon-pink mb-2">Módulo 04</p>
+    <h2 class="font-display text-3xl md:text-5xl font-bold tracking-tightest mb-3">Hipermedia e <span class="text-gradient">Interactividad</span></h2>
+    <p class="text-slate-300 text-lg max-w-4xl">Del <strong class="text-neon-cyan">texto lineal</strong> (un solo camino) al <strong class="text-neon-purple">hipertexto</strong> (muchos caminos enlazados) y de ahí a la <strong class="text-neon-lime">hipermedia</strong> (caminos + imágenes + sonido + video + acción del usuario).</p>
+  </header>
+  <div class="grid md:grid-cols-3 gap-5 mb-8" id="hyper-cards"></div>
+  <div class="glass rounded-2xl p-6 mb-8">
+    <div class="flex flex-wrap items-end justify-between gap-3 mb-4">
+      <div>
+        <h3 class="font-display text-2xl font-bold flex items-center gap-2"><i class="fas fa-vial-circle-check text-neon-lime"></i>Simulador comparativo</h3>
+        <p class="text-sm text-slate-400 mt-1">El mismo contenido ("La historia de la Web") presentado de tres maneras.</p>
+      </div>
+      <span id="hyper-badge" class="text-[11px] font-bold px-3 py-1.5 rounded-full bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/40">Interactividad: baja</span>
+    </div>
+    <div class="grid grid-cols-3 gap-2 mb-5 no-print" id="hyper-modes">
+      <button class="mode-btn active py-3 px-3 rounded-xl border-2 border-neon-cyan bg-neon-cyan/15 text-neon-cyan font-bold text-xs md:text-sm" data-mode="lineal"><i class="fas fa-align-left block text-lg mb-1"></i>Texto lineal</button>
+      <button class="mode-btn py-3 px-3 rounded-xl border-2 border-ed-border bg-ed-darker/50 text-slate-300 font-bold text-xs md:text-sm" data-mode="hipertexto"><i class="fas fa-link block text-lg mb-1"></i>Hipertexto</button>
+      <button class="mode-btn py-3 px-3 rounded-xl border-2 border-ed-border bg-ed-darker/50 text-slate-300 font-bold text-xs md:text-sm" data-mode="hipermedia"><i class="fas fa-diagram-project block text-lg mb-1"></i>Hipermedia</button>
+    </div>
+    <div id="hyper-stage" class="bg-ed-darker rounded-2xl border-2 border-ed-border p-5 md:p-6 min-h-[380px]"></div>
+    <div id="hyper-desc" class="mt-4 p-4 rounded-xl bg-gradient-to-r from-neon-cyan/10 to-neon-purple/10 border border-neon-cyan/30 text-sm text-slate-200"></div>
+  </div>
+  <div class="grid lg:grid-cols-2 gap-6 mb-8">
+    <div class="glass rounded-2xl p-6">
+      <h3 class="font-display text-xl font-bold mb-1"><i class="fas fa-sliders text-neon-amber mr-2"></i>Espectro de interactividad</h3>
+      <p class="text-xs text-slate-400 mb-5">Mové el control y ubicá cada soporte en la escala que va del papel a la realidad virtual.</p>
+      <input id="spectrum" type="range" min="0" max="5" value="0" step="1" class="w-full no-print">
+      <div class="flex justify-between text-[10px] text-slate-500 mt-2 font-mono"><span>Libro</span><span>PDF</span><span>Web</span><span>Video</span><span>Juego</span><span>VR</span></div>
+      <div id="spectrum-card" class="mt-5 p-5 rounded-xl bg-ed-darker/70 border border-ed-border"></div>
+    </div>
+    <div class="glass rounded-2xl p-6">
+      <h3 class="font-display text-xl font-bold mb-1"><i class="fas fa-chart-column text-neon-cyan mr-2"></i>Nivel de interactividad</h3>
+      <p class="text-xs text-slate-400 mb-5">Puntaje de 1 (pasivo) a 5 (inmersivo) según cuántas decisiones toma el usuario.</p>
+      <div id="chart-interactividad" class="space-y-3"></div>
+    </div>
+  </div>
+  <div class="glass rounded-2xl p-6">
+    <h3 class="font-display text-xl font-bold mb-4"><i class="fas fa-map-location-dot text-neon-purple mr-2"></i>Hipermedia en contextos reales</h3>
+    <div id="hyper-casos" class="grid md:grid-cols-2 gap-4"></div>
+  </div>
+</section>
+
+<!-- ============ TAB 6 · EVALUACIÓN + EXPORTACIÓN PDF ============ -->
+<section id="tab-evaluacion" class="tab-content hidden">
+  <header class="mb-8">
+    <p class="text-xs uppercase tracking-[.25em] text-neon-amber mb-2">Módulo 05 · Final</p>
+    <h2 class="font-display text-3xl md:text-5xl font-bold tracking-tightest mb-3">Evaluación <span class="text-gradient">NTiCx</span></h2>
+    <p class="text-slate-300 text-lg max-w-4xl">Cinco preguntas, una por módulo. Cada acierto suma <strong class="text-neon-lime">+20 XP</strong>. Al finalizar podés <strong class="text-neon-cyan">descargar un informe en PDF</strong> con tus datos, las preguntas, tus respuestas y el resultado final.</p>
+  </header>
+
+  <!-- DATOS DEL ESTUDIANTE (necesarios para el PDF) -->
+  <div id="st-form" class="glass rounded-2xl p-6 mb-6 border-l-4 border-neon-cyan">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+      <div>
+        <h3 class="font-display text-xl font-bold flex items-center gap-2"><i class="fas fa-id-card text-neon-cyan"></i>Completá tus datos</h3>
+        <p class="text-xs text-slate-400 mt-1">Estos datos se imprimen en el encabezado del PDF de tu evaluación. Se guardan en este navegador.</p>
+      </div>
+      <span class="text-[11px] px-3 py-1 rounded-full bg-neon-amber/15 text-neon-amber border border-neon-amber/40"><i class="fas fa-triangle-exclamation mr-1"></i>Obligatorio para exportar</span>
+    </div>
+    <div class="grid md:grid-cols-2 gap-4">
+      <div><label class="text-[11px] uppercase tracking-widest text-slate-400 mb-1 block" for="st-nombre">Nombre y apellido *</label><input id="st-nombre" class="field" type="text" placeholder="Ej: Julieta Álvarez" autocomplete="name"></div>
+      <div><label class="text-[11px] uppercase tracking-widest text-slate-400 mb-1 block" for="st-escuela">Escuela *</label><input id="st-escuela" class="field" type="text" placeholder="Ej: E.E.S. N° 12 José de San Martín"></div>
+      <div><label class="text-[11px] uppercase tracking-widest text-slate-400 mb-1 block" for="st-curso">Curso y división *</label><input id="st-curso" class="field" type="text" placeholder="Ej: 4to 2da - Turno Mañana"></div>
+      <div><label class="text-[11px] uppercase tracking-widest text-slate-400 mb-1 block" for="st-docente">Docente / Materia</label><input id="st-docente" class="field" type="text" placeholder="Ej: Prof. Martín Gómez - NTiCx"></div>
+    </div>
+    <div class="mt-4 flex flex-wrap gap-3">
+      <button id="btn-save-student" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-purple text-ed-darker font-bold text-sm hover:scale-105 transition"><i class="fas fa-floppy-disk mr-2"></i>Guardar datos</button>
+      <p id="st-status" class="text-xs text-slate-500 self-center"></p>
+    </div>
+  </div>
+
+  <!-- MARCADOR -->
+  <div class="glass rounded-2xl p-5 mb-6 flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-neon-amber to-neon-pink flex items-center justify-center"><i class="fas fa-trophy text-2xl text-ed-darker"></i></div>
+      <div><p class="text-xs uppercase tracking-widest text-slate-400">Marcador</p><p class="font-display text-xl font-bold"><span id="quiz-score" class="text-neon-lime">0</span><span class="text-slate-500">/5 correctas</span></p></div>
+    </div>
+    <div class="flex gap-1.5" id="quiz-dots"></div>
+    <div class="flex gap-2">
+      <button onclick="resetTrivia()" class="px-4 py-2 rounded-xl border border-ed-border text-sm hover:border-neon-cyan hover:text-neon-cyan transition no-print"><i class="fas fa-rotate-right mr-2"></i>Reiniciar</button>
+      <button id="btn-pdf-top" onclick="exportPDF()" disabled class="px-4 py-2 rounded-xl border border-neon-lime text-neon-lime text-sm font-bold opacity-40 cursor-not-allowed no-print"><i class="fas fa-file-pdf mr-2"></i>Descargar PDF</button>
+    </div>
+  </div>
+
+  <div id="trivia-wrap" class="space-y-5"></div>
+
+  <!-- RESULTADO -->
+  <div id="quiz-result" class="hidden glass rounded-3xl p-8 md:p-10 text-center border-2 border-neon-lime mt-6">
+    <div class="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-neon-lime to-neon-cyan flex items-center justify-center mb-5 anim-float"><i class="fas fa-crown text-5xl text-ed-darker"></i></div>
+    <h3 class="font-display text-3xl md:text-4xl font-bold mb-2 text-gradient">¡Evaluación completada!</h3>
+    <p id="quiz-msg" class="text-slate-300 mb-5"></p>
+    <p class="font-display text-5xl font-bold text-neon-lime mb-1"><span id="quiz-final">0</span>/5</p>
+    <p class="text-sm text-slate-400">XP ganado en la trivia: <span id="quiz-xp" class="text-neon-lime font-bold font-mono">0</span></p>
+
+    <!-- BOTÓN PRINCIPAL DE EXPORTACIÓN -->
+    <div class="mt-6 p-5 rounded-2xl bg-ed-darker/70 border border-neon-cyan/40 text-left">
+      <p class="font-display font-bold text-neon-cyan mb-1"><i class="fas fa-file-pdf mr-2"></i>Exportar informe de evaluación (PDF)</p>
+      <p class="text-xs text-slate-400 mb-4">El archivo incluye: fecha y hora, escuela, curso, nombre del estudiante, cada pregunta con la respuesta elegida y la correcta, la explicación, y el resultado final con el estado alcanzado.</p>
+      <div class="flex flex-wrap gap-3">
+        <button id="btn-pdf" onclick="exportPDF()" class="px-5 py-3 rounded-xl bg-gradient-to-r from-neon-lime to-neon-cyan text-ed-darker font-bold hover:scale-105 transition"><i class="fas fa-download mr-2"></i>Descargar PDF</button>
+        <button onclick="window.print()" class="px-5 py-3 rounded-xl border border-ed-border text-slate-200 font-bold hover:border-neon-cyan hover:text-neon-cyan transition no-print"><i class="fas fa-print mr-2"></i>Imprimir</button>
+      </div>
+      <p id="pdf-warn" class="hidden mt-3 text-xs text-neon-amber"><i class="fas fa-triangle-exclamation mr-1"></i>Completá nombre, escuela y curso para generar el PDF.</p>
+    </div>
+
+    <div id="quiz-review" class="mt-6 text-left space-y-3"></div>
+    <div class="mt-7 flex flex-wrap justify-center gap-3">
+      <button onclick="resetTrivia()" class="px-5 py-3 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-purple text-ed-darker font-bold hover:scale-105 transition"><i class="fas fa-rotate-right mr-2"></i>Volver a intentar</button>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- MODAL plataformas -->
+<div id="modal" class="modal-backdrop hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm p-4 flex items-center justify-center anim-fade no-print">
+  <div class="glass rounded-3xl max-w-2xl w-full p-6 md:p-8 border border-neon-cyan/40 max-h-[85vh] overflow-y-auto anim-slide">
+    <div class="flex items-start justify-between gap-4 mb-4">
+      <div class="flex items-center gap-4">
+        <div id="m-icon" class="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"></div>
+        <div><h3 id="m-name" class="font-display text-2xl font-bold"></h3><p id="m-cat" class="text-xs uppercase tracking-widest text-slate-400"></p></div>
+      </div>
+      <button onclick="closeModal()" class="w-9 h-9 rounded-xl border border-ed-border hover:border-neon-pink hover:text-neon-pink transition"><i class="fas fa-xmark"></i></button>
+    </div>
+    <p id="m-desc" class="text-slate-300 text-sm leading-relaxed mb-5"></p>
+    <div class="grid sm:grid-cols-2 gap-4 mb-5">
+      <div class="p-4 rounded-xl bg-ed-darker/60 border border-ed-border"><p class="text-[11px] uppercase tracking-widest text-slate-500 mb-2">Formatos que usa</p><div id="m-formats" class="flex flex-wrap gap-1.5"></div></div>
+      <div class="p-4 rounded-xl bg-ed-darker/60 border border-ed-border"><p class="text-[11px] uppercase tracking-widest text-slate-500 mb-2">Concepto NTiCx</p><p id="m-lang" class="text-sm text-neon-cyan font-medium"></p></div>
+    </div>
+    <div class="p-4 rounded-xl bg-neon-lime/10 border border-neon-lime/40"><p class="text-[11px] uppercase tracking-widest text-neon-lime mb-1"><i class="fas fa-graduation-cap mr-1"></i>Para analizar en clase</p><p id="m-task" class="text-sm text-slate-200"></p></div>
+    <div class="mt-5 flex items-center justify-between gap-3"><p class="text-[11px] text-slate-500">Primera visita: <span class="text-neon-lime font-bold">+5 XP</span></p><button onclick="closeModal()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-purple text-ed-darker font-bold text-sm">Listo</button></div>
+  </div>
+</div>
+
+<div id="toast-wrap" class="fixed top-28 right-4 z-[60] space-y-2 w-[260px] no-print"></div>
+
+<footer class="glass border-t border-ed-border mt-12 no-print">
+  <div class="max-w-7xl mx-auto px-4 py-6 flex flex-wrap items-center justify-between gap-3">
+    <p class="text-sm text-slate-400"><i class="fas fa-code mr-1 text-neon-cyan"></i>NTiCx Academy · Material interactivo para 4to Año · Argentina</p>
+    <p class="text-xs text-slate-500"><i class="fas fa-lightbulb mr-1 text-neon-amber"></i>Presioná <kbd class="px-1.5 py-0.5 bg-ed-darker rounded border border-ed-border font-mono">F12</kbd> y explorá el código.</p>
+  </div>
+</footer>
+
+<!-- ============================================================
+     JAVASCRIPT
+     1) Estado   2) Datos   3) XP/Medallas   4) Navegación
+     5) Gráficos 6) Simuladores 7) Trivia 8) PDF 9) Persistencia
+     ============================================================ -->
+<script>
+/* ---------- 1) ESTADO GLOBAL ---------- */
+const AppState = {
+  xp:0,
+  visitedTabs:new Set(),
+  activities:{ multimedia:false, hyperModes:new Set(), spectrum:false, decider:false, platforms:new Set() },
+  medals:{},
+  trivia:{ choices:{}, answered:[], correct:0, finished:false },
+  student:{ nombre:'', escuela:'', curso:'', docente:'' },
+  currentTab:'dashboard'
+};
+
+const MEDALS = [
+  {id:'primerPaso', title:'Primer Paso', icon:'fa-shoe-prints', color:'var(--neon-cyan)', desc:'Ingresaste a la plataforma'},
+  {id:'explorador', title:'Explorador/a', icon:'fa-compass', color:'var(--neon-purple)', desc:'Visitaste 3 módulos'},
+  {id:'multimedia', title:'Multimedia Master', icon:'fa-photo-film', color:'var(--neon-lime)', desc:'Completaste el simulador'},
+  {id:'cazadorDatos', title:'Cazador de Datos', icon:'fa-magnifying-glass-chart', color:'var(--neon-amber)', desc:'Analizaste 3 plataformas'},
+  {id:'navegante', title:'Navegante Hipermedia', icon:'fa-diagram-project', color:'var(--neon-pink)', desc:'Probaste los 3 modos y el espectro'},
+  {id:'ciudadano', title:'Ciudadano/a Digital Experto', icon:'fa-crown', color:'var(--neon-cyan)', desc:'Aprobaste la trivia (3+ correctas)'}
+];
+MEDALS.forEach(m=>AppState.medals[m.id]=false);
+
+/* ---------- 2) DATOS DIDÁCTICOS ---------- */
+const PLATFORMS = [
+  {n:'YouTube',i:'fab fa-youtube',c:'#ff0000',cat:'Streaming',f:['.mp4','.webm','.mp3','.vtt'],l:'Video + hipertexto (enlaces, playlists, capítulos)',d:'Plataforma de video con comentarios, listas, subtítulos y capítulos navegables. Combina imagen en movimiento, audio y texto.',t:'Buscá un video educativo y marcá dónde usa texto (subtítulos), audio e imagen. ¿Qué pasaría si le sacaras el sonido?'},
+  {n:'TikTok',i:'fab fa-tiktok',c:'#25f4ee',cat:'Redes sociales',f:['.mp4','.mp3','.webp'],l:'Video corto vertical + audio viral + hashtags',d:'Videos de pocos segundos con música, efectos y texto superpuesto. El algoritmo decide qué ves: interactividad alta pero guiada.',t:'Analizá un trend: ¿qué elementos se repiten entre todos los videos? Eso es un lenguaje compartido.'},
+  {n:'Instagram',i:'fab fa-instagram',c:'#e1306c',cat:'Redes sociales',f:['.jpg','.mp4','.gif','.webp'],l:'Imagen + stories efímeras + reels + encuestas',d:'Mezcla fotos, reels, historias que desaparecen y stickers interactivos (encuestas, preguntas, cuentas regresivas).',t:'Compará un post y una historia de la misma cuenta: ¿cuál es más interactiva? ¿Por qué?'},
+  {n:'Wikipedia',i:'fab fa-wikipedia-w',c:'#94a3b8',cat:'Info / Educación',f:['.html','.png','.svg','.pdf'],l:'Hipertexto puro: enlaces entre artículos',d:'El ejemplo clásico de hipertexto: cada palabra azul te lleva a otro artículo. Podés perderte horas saltando enlaces.',t:'Entrá a un artículo y contá cuántos enlaces tiene. ¿Cuántos formatos distintos aparecen en una sola página?'},
+  {n:'Spotify',i:'fab fa-spotify',c:'#1db954',cat:'Streaming',f:['.ogg','.mp3','.jpg'],l:'Audio + playlists colaborativas + podcasts',d:'Streaming de audio con portadas, letras sincronizadas y listas que se pueden compartir y editar entre usuarios.',t:'Fijate qué formato de imagen usa la portada de un disco y por qué conviene que pese poco.'},
+  {n:'Netflix',i:'fas fa-tv',c:'#e50914',cat:'Streaming',f:['.mp4','.mkv','.srt','.jpg'],l:'Video bajo demanda + perfiles + navegación por catálogo',d:'Hipervideo: elegís qué ver, cuándo pausar y con qué subtítulos. El contenido se adapta al dispositivo y a la conexión.',t:'¿Qué decisiones tomás mientras usás Netflix? Anotalas: eso es interactividad.'},
+  {n:'Twitch',i:'fab fa-twitch',c:'#9146ff',cat:'Streaming',f:['.mp4','.png','.ogg'],l:'Video en vivo + chat en tiempo real',d:'Streaming en directo donde el chat modifica lo que pasa: el emisor responde, juega o cambia el contenido según la audiencia.',t:'El chat es interactividad sincrónica. ¿Qué diferencia hay con los comentarios de YouTube?'},
+  {n:'WhatsApp',i:'fab fa-whatsapp',c:'#25d366',cat:'Comunicación',f:['.opus','.jpg','.mp4','.pdf','.webp'],l:'Mensajería multimodal: texto, audio, imagen, video',d:'Un solo chat puede contener los cinco tipos de información. Las notas de voz usan .opus, optimizado para voz.',t:'Abrí un chat y clasificá los últimos 10 mensajes por formato. ¿Cuál predomina?'},
+  {n:'Discord',i:'fab fa-discord',c:'#5865f2',cat:'Comunicación',f:['.opus','.png','.gif','.mp4'],l:'Servidores + canales de texto y voz + bots',d:'Organiza la comunicación en servidores y canales temáticos, con voz en tiempo real, GIFs y bots que automatizan tareas.',t:'Compará la estructura de canales con un hipertexto: ¿cómo se organiza la información?'},
+  {n:'X (Twitter)',i:'fab fa-x-twitter',c:'#e2e8f0',cat:'Redes sociales',f:['.jpg','.mp4','.gif'],l:'Micromensajes + hilos (threads) + retweets',d:'Textos breves encadenados en hilos que permiten desarrollar un tema largo en pequeñas entregas numeradas.',t:'Buscá un hilo educativo y explicá por qué se cuenta en partes y no en un solo texto.'},
+  {n:'Canva',i:'fas fa-palette',c:'#00c4cc',cat:'Herramientas',f:['.png','.jpg','.pdf','.mp4'],l:'Editor multimedia en la nube + plantillas',d:'Permite crear piezas multimedia (afiches, presentaciones, videos) combinando texto, imagen y audio sin instalar programas.',t:'Diseñá un afiche sobre NTiCx usando al menos 3 medios distintos.'},
+  {n:'Google Maps',i:'fas fa-map-location-dot',c:'#4285f4',cat:'Herramientas',f:['.png','.jpg','.svg','.json'],l:'Mapa interactivo + Street View + reseñas',d:'Hipermedia total: mapa vectorial, fotos 360°, capas de tráfico, transporte y comentarios de usuarios enlazados al lugar.',t:'Activá distintas capas del mapa. ¿Qué información aporta cada una?'},
+  {n:'Duolingo',i:'fas fa-graduation-cap',c:'#58cc02',cat:'Info / Educación',f:['.mp3','.png','.ogg'],l:'Gamificación: XP, rachas, niveles, audio y texto',d:'Aprender idiomas con mecánicas de juego. Es un ejemplo de e-learning multimedia e interactivo, igual que esta web.',t:'Compará el sistema de XP de Duolingo con el de NTiCx Academy. ¿Qué te motiva más?'},
+  {n:'Kahoot!',i:'fas fa-circle-question',c:'#6e35b1',cat:'Info / Educación',f:['.jpg','.png','.mp3'],l:'Trivia en vivo + ranking + tiempo límite',d:'Evaluación gamificada en tiempo real: preguntas multimedia, música y puntajes que generan competencia sana.',t:'Nuestra trivia está inspirada en este formato. ¿Qué le agregarías?'},
+  {n:'Steam',i:'fab fa-steam',c:'#66c0f4',cat:'Herramientas',f:['.mp4','.png','.json'],l:'Tienda + comunidad + videojuegos',d:'Combina catálogo multimedia, reseñas, foros, streaming y logros desbloqueables (igual que nuestras medallas).',t:'Los "logros" de Steam son el origen de las medallas de esta web. ¿Por qué motivan?'},
+  {n:'Podcasts',i:'fas fa-podcast',c:'#f59e0b',cat:'Info / Educación',f:['.mp3','.m4a','.jpg','.xml'],l:'Audio por episodios + feed RSS',d:'Contenido sonoro on demand que se consume mientras hacés otra cosa. El feed RSS permite suscribirse.',t:'Escuchá 5 minutos de un podcast educativo y resumilo en 3 ideas.'}
+];
+
+const COMPONENTS = [
+  {id:'texto',icon:'fa-font',color:'var(--neon-cyan)',name:'Texto',ex:'Títulos, párrafos, subtítulos, hipervínculos',ext:'.txt .pdf .html .docx'},
+  {id:'imagen',icon:'fa-image',color:'var(--neon-purple)',name:'Imagen',ex:'Fotos, ilustraciones, infografías, GIF',ext:'.jpg .png .gif .svg .webp'},
+  {id:'audio',icon:'fa-music',color:'var(--neon-lime)',name:'Audio',ex:'Voz, música, efectos, notas de voz',ext:'.mp3 .wav .ogg .flac'},
+  {id:'video',icon:'fa-video',color:'var(--neon-pink)',name:'Video',ex:'Clips, películas, transmisiones en vivo',ext:'.mp4 .mov .mkv .webm'}
+];
+
+const LANGUAGES = [
+  {icon:'fa-face-laugh-squint',c:'#22d3ee',t:'Memés',d:'Plantillas de imagen + texto que condensan una idea con humor o crítica. Se remixan y se viralizan.',ex:'Dónde: X, Instagram, WhatsApp',tags:['Viral','Humor','Remix']},
+  {icon:'fa-diagram-project',c:'#c084fc',t:'Narrativa transmedia',d:'Una historia contada en varias plataformas, donde cada medio aporta una pieza distinta del universo.',ex:'Ej: sagas de cine + juegos + redes',tags:['Multiplataforma','Universo']},
+  {icon:'fa-list-ol',c:'#a3e635',t:'Hilos (threads)',d:'Secuencias numeradas de publicaciones que desarrollan un tema largo en entregas breves.',ex:'Dónde: X, Threads, Bluesky',tags:['Secuencial','Divulgación']},
+  {icon:'fa-clapperboard',c:'#f472b6',t:'Reels / Shorts / TikTok',d:'Video vertical de 15 a 60 segundos con música, subtítulos y gancho en los primeros 2 segundos.',ex:'Dónde: TikTok, IG, YouTube',tags:['Breve','Vertical','Sonoro']},
+  {icon:'fa-podcast',c:'#fbbf24',t:'Podcasts y notas de voz',d:'Audio on demand o mensajes de voz que reemplazan a la llamada telefónica.',ex:'Dónde: Spotify, WhatsApp',tags:['Audio','On demand']},
+  {icon:'fa-face-grin-stars',c:'#22d3ee',t:'Emojis, stickers y GIFs',d:'Lenguaje visual universal que reemplaza o refuerza palabras y transmite emoción al instante.',ex:'Dónde: WhatsApp, Discord, IG',tags:['Emocional','Universal']},
+  {icon:'fa-gamepad',c:'#a3e635',t:'Gameplay y streaming',d:'Narrar jugando: el contenido es la acción en tiempo real con una comunidad interactuando.',ex:'Dónde: Twitch, YouTube Gaming',tags:['En vivo','Comunidad']},
+  {icon:'fa-wand-magic-sparkles',c:'#c084fc',t:'Contenido con IA',d:'Imágenes, textos y voces generadas por inteligencia artificial: un nuevo modo de producir información.',ex:'Dónde: chatbots, generadores de imágenes',tags:['Generativo','Automático']},
+  {icon:'fa-qrcode',c:'#f472b6',t:'QR, AR y experiencias mixtas',d:'Códigos que unen el mundo físico con el digital: afiches, museos, packaging y filtros.',ex:'Dónde: publicidad, museos, IG',tags:['Físico-digital','Interactivo']}
+];
+
+const TIMELINE = [
+  {y:'1989',i:'fa-globe',c:'#22d3ee',t:'Nace la Web',d:'Tim Berners-Lee propone la WWW en el CERN.'},
+  {y:'1991',i:'fa-file-lines',c:'#22d3ee',t:'Primer sitio',d:'Texto puro con enlaces: hipertexto.'},
+  {y:'1995',i:'fa-compact-disc',c:'#c084fc',t:'Multimedia',d:'Llegan imágenes, sonido y el CD-ROM interactivo.'},
+  {y:'2004',i:'fa-users',c:'#a3e635',t:'Web 2.0',d:'El usuario produce contenido: blogs, fotos, foros.'},
+  {y:'2005',i:'fa-play',c:'#f472b6',t:'YouTube',d:'El video se vuelve masivo y cotidiano.'},
+  {y:'2007',i:'fa-mobile-screen',c:'#fbbf24',t:'Smartphone',d:'Internet en el bolsillo: contenido en cualquier lugar.'},
+  {y:'2012',i:'fa-camera',c:'#f472b6',t:'Instagram',d:'La imagen manda; nace el lenguaje visual del feed.'},
+  {y:'2016',i:'fa-music',c:'#22d3ee',t:'TikTok',d:'Video vertical corto + audio viral + algoritmo.'},
+  {y:'2020',i:'fa-video',c:'#c084fc',t:'Videollamadas',d:'La escuela y el trabajo se vuelven multimedia en vivo.'},
+  {y:'2022',i:'fa-robot',c:'#a3e635',t:'IA generativa',d:'Texto, imagen y voz creados por modelos de IA.'},
+  {y:'2024+',i:'fa-vr-cardboard',c:'#fbbf24',t:'Inmersivo',d:'Realidad mixta, mundos virtuales e interfaces conversacionales.'}
+];
+
+const FORMATS = [
+  {id:'textual',t:'Textual',i:'fa-file-lines',c:'#22d3ee',d:'Información codificada en caracteres legibles.',ext:['.txt','.pdf','.docx','.html','.md','.rtf'],ex:['Libros digitales y apuntes','Contratos y facturas electrónicas','Páginas web (HTML)','Subtítulos (.srt / .vtt)'],real:'La tarea que entregás en PDF es información textual.'},
+  {id:'sonora',t:'Sonora / Verbal',i:'fa-microphone-lines',c:'#c084fc',d:'Información transmitida por sonido y voz.',ext:['.mp3','.wav','.ogg','.flac','.m4a','.opus'],ex:['Notas de voz de WhatsApp (.opus)','Podcasts y audiolibros','Música en streaming','Efectos de videojuegos'],real:'Un audio de 2 minutos ocupa mucho menos que un video.'},
+  {id:'visual',t:'Visual / Icónica',i:'fa-image',c:'#a3e635',d:'Información percibida por la vista: imágenes fijas.',ext:['.jpg','.png','.gif','.svg','.webp','.bmp'],ex:['Fotos de perfil (.jpg)','Stickers y logos con fondo transparente','Íconos vectoriales (.svg)','Memes y GIF animados'],real:'El .svg no pierde calidad al agrandarse: es vectorial.'},
+  {id:'audiovisual',t:'Audiovisual',i:'fa-film',c:'#f472b6',d:'Imagen en movimiento sincronizada con sonido.',ext:['.mp4','.mov','.mkv','.webm','.avi'],ex:['Reels, Shorts y TikToks','Películas en streaming','Videollamadas grabadas','Gameplays y tutoriales'],real:'Es el formato que más datos consume de tu plan móvil.'}
+];
+
+const FILE_SIZES = {
+  'Audio (3 min)':[{label:'.wav (sin comprimir)',value:32,color:'#c084fc',unit:' MB'},{label:'.flac (sin pérdida)',value:18,color:'#22d3ee',unit:' MB'},{label:'.ogg',value:3.4,color:'#a3e635',unit:' MB'},{label:'.mp3 (128 kbps)',value:2.9,color:'#f472b6',unit:' MB'}],
+  'Foto (12 MP)':[{label:'.bmp (sin comprimir)',value:36,color:'#c084fc',unit:' MB'},{label:'.png',value:9,color:'#a3e635',unit:' MB'},{label:'.jpg',value:3.2,color:'#22d3ee',unit:' MB'},{label:'.webp',value:1.6,color:'#f472b6',unit:' MB'}],
+  'Video (1 min · 1080p)':[{label:'.mov / sin comprimir',value:220,color:'#c084fc',unit:' MB'},{label:'.mkv',value:130,color:'#a3e635',unit:' MB'},{label:'.mp4 (H.264)',value:60,color:'#22d3ee',unit:' MB'},{label:'.webm (VP9)',value:38,color:'#f472b6',unit:' MB'}]
+};
+
+const EXT_TABLE = [
+  ['.pdf','Textual','Sin pérdida','Tarea que entregás en el aula virtual'],['.docx','Textual','Alta','Trabajo práctico en Word / Docs'],
+  ['.html','Textual','—','Cualquier página web que visitás'],['.mp3','Sonora','Con pérdida','Canción descargada o podcast'],
+  ['.opus','Sonora','Con pérdida','Nota de voz de WhatsApp'],['.wav','Sonora','Sin pérdida','Grabación de estudio / edición'],
+  ['.jpg','Visual','Con pérdida','Foto de la cámara del celular'],['.png','Visual','Sin pérdida','Sticker o imagen con fondo transparente'],
+  ['.svg','Visual','Vectorial','Ícono de una página web'],['.webp','Visual','Mixta','Imágenes livianas en redes sociales'],
+  ['.gif','Visual','Animada','Reacción en Discord o un meme animado'],['.mp4','Audiovisual','Con pérdida','Reel, Short, TikTok o clase grabada'],
+  ['.mkv','Audiovisual','Con pérdida','Película con varios subtítulos'],['.webm','Audiovisual','Con pérdida','Video liviano incrustado en una web']
+];
+
+const CHARTS = {
+  uso:[{label:'Video corto (TikTok/Reels)',value:2.6,color:'#f472b6',unit:' h'},{label:'Redes sociales',value:2.1,color:'#c084fc',unit:' h'},{label:'Música / podcasts',value:1.5,color:'#a3e635',unit:' h'},{label:'Videojuegos',value:1.3,color:'#22d3ee',unit:' h'},{label:'Lectura digital',value:0.6,color:'#fbbf24',unit:' h'}],
+  feed:[{label:'Video',value:44,color:'#f472b6'},{label:'Imagen',value:31,color:'#c084fc'},{label:'Texto',value:15,color:'#22d3ee'},{label:'Audio',value:10,color:'#a3e635'}],
+  retencion:[{label:'Solo texto',value:10,color:'#22d3ee',unit:'%'},{label:'Texto + imagen',value:35,color:'#c084fc',unit:'%'},{label:'+ audio',value:55,color:'#a3e635',unit:'%'},{label:'+ video',value:70,color:'#f472b6',unit:'%'},{label:'Multimedia interactiva',value:90,color:'#fbbf24',unit:'%'}],
+  duracion:[{label:'TikTok / Reels / Shorts',value:0.6,color:'#f472b6',unit:' min'},{label:'Publicación en X',value:0.2,color:'#22d3ee',unit:' min'},{label:'Historia (24 h)',value:0.25,color:'#c084fc',unit:' min'},{label:'Video de YouTube',value:9,color:'#ff5c5c',unit:' min'},{label:'Podcast',value:32,color:'#a3e635',unit:' min'},{label:'Stream en Twitch',value:120,color:'#9146ff',unit:' min'}],
+  interactividad:[{label:'Libro impreso',value:1,color:'#94a3b8',unit:'/5'},{label:'PDF',value:2,color:'#22d3ee',unit:'/5'},{label:'Sitio web / Wikipedia',value:3,color:'#c084fc',unit:'/5'},{label:'Video con capítulos',value:4,color:'#a3e635',unit:'/5'},{label:'Videojuego',value:5,color:'#f472b6',unit:'/5'},{label:'Realidad virtual',value:5,color:'#fbbf24',unit:'/5'}]
+};
+
+const SPECTRUM = [
+  {t:'Libro impreso',i:'fa-book',c:'#94a3b8',d:'Lectura 100% lineal: una sola secuencia, sin enlaces ni respuesta del sistema.',niv:'Nulo'},
+  {t:'PDF digital',i:'fa-file-pdf',c:'#22d3ee',d:'Agrega índice navegable, búsqueda y zoom, pero el contenido sigue siendo fijo.',niv:'Bajo'},
+  {t:'Sitio web / Wikipedia',i:'fa-globe',c:'#c084fc',d:'Hipertexto e hipermedia: elegís qué leer, mirás imágenes y videos, saltás entre páginas.',niv:'Medio'},
+  {t:'Video interactivo',i:'fa-circle-play',c:'#a3e635',d:'Controlás reproducción, velocidad, subtítulos y capítulos; algunos videos permiten elegir finales.',niv:'Medio-alto'},
+  {t:'Videojuego',i:'fa-gamepad',c:'#f472b6',d:'Cada acción modifica el estado del sistema: decisiones, exploración y respuesta inmediata.',niv:'Alto'},
+  {t:'Realidad virtual / mixta',i:'fa-vr-cardboard',c:'#fbbf24',d:'Inmersión total: el entorno reacciona a tu cuerpo, tu voz y tu mirada.',niv:'Muy alto'}
+];
+
+const MM_CASES = [
+  {i:'fa-chalkboard-user',c:'#22d3ee',t:'Clase en el aula virtual',d:'Video grabado + PDF + foro de texto + audios del profe.',medios:['texto','imagen','audio','video']},
+  {i:'fa-gamepad',c:'#a3e635',t:'Videojuego',d:'Gráficos, música, voces, diálogos escritos y menús interactivos.',medios:['texto','imagen','audio','video']},
+  {i:'fa-newspaper',c:'#f472b6',t:'Portal de noticias',d:'Título, foto, video del hecho y comentarios de lectores.',medios:['texto','imagen','video']},
+  {i:'fa-bag-shopping',c:'#c084fc',t:'Tienda online',d:'Ficha con fotos, video demo, reseñas y chat de atención.',medios:['texto','imagen','video']}
+];
+const HYPER_CASES = [
+  {i:'fab fa-wikipedia-w',c:'#94a3b8',t:'Wikipedia',d:'Hipertexto clásico: cada enlace abre un nuevo recorrido de lectura. No hay un orden obligatorio.'},
+  {i:'fa-map-location-dot',c:'#4285f4',t:'Google Maps',d:'Hipermedia pura: mapa vectorial + fotos 360° + reseñas + capas de tráfico, todo interactivo.'},
+  {i:'fa-compact-disc',c:'#f472b6',t:'Videojuego de mundo abierto',d:'El usuario decide el recorrido y el contenido cambia según sus acciones.'},
+  {i:'fa-laptop-code',c:'#a3e635',t:'Esta misma web',d:'Pestañas, simuladores, medallas y trivia: hipermedia educativa con gamificación.'}
+];
+
+const HYPER = {
+  titulo:'La historia de la Web',
+  parrafos:[
+    'La World Wide Web nació en 1989 en el CERN, cuando Tim Berners-Lee propuso un sistema para compartir información entre científicos.',
+    'Ese sistema combinaba tres piezas: un lenguaje para escribir páginas, un protocolo para transmitirlas y un programa para verlas.',
+    'Hoy la Web es el mayor espacio de comunicación del planeta y sigue evolucionando hacia formas más interactivas.'
+  ],
+  nodos:[
+    {id:'web',label:'WWW',x:50,y:16,c:'#22d3ee',info:'Red mundial de documentos enlazados. Nació en 1989 en el CERN (Suiza).'},
+    {id:'html',label:'HTML',x:16,y:46,c:'#c084fc',info:'HyperText Markup Language: el lenguaje con el que se escriben las páginas. Esta web está hecha en HTML.'},
+    {id:'http',label:'HTTP',x:84,y:46,c:'#a3e635',info:'HyperText Transfer Protocol: las reglas que usan navegador y servidor para pedirse y enviarse información.'},
+    {id:'url',label:'URL',x:24,y:82,c:'#fbbf24',info:'La dirección única de cada recurso, por ejemplo: https://escuela.edu.ar/nticx/index.html'},
+    {id:'browser',label:'Navegador',x:76,y:82,c:'#f472b6',info:'El programa que interpreta HTML y muestra la página: Chrome, Firefox, Edge, Safari.'}
+  ],
+  lineas:[['web','html'],['web','http'],['html','url'],['http','url'],['html','browser'],['http','browser']]
+};
+
+const QUIZ = [
+  {tema:'Multimedia',icon:'fa-photo-film',c:'#22d3ee',q:'Una compañera presenta un trabajo con texto, fotos, una canción de fondo y un video. ¿Por qué es un producto multimedia?',o:['Porque usa una computadora','Porque integra varios medios distintos en un mismo soporte','Porque tiene colores y animaciones','Porque lo subió a Internet'],a:1,why:'Multimedia = integración de dos o más medios (texto, imagen, audio, video) en un mismo soporte digital.'},
+  {tema:'Nuevos lenguajes',icon:'fa-language',c:'#c084fc',q:'Una serie cuenta su historia en streaming, los personajes tienen cuentas reales en redes y hay un juego que amplía la trama. ¿Qué lenguaje es?',o:['Narrativa transmedia','Texto lineal','Hipervideo','Microrrelato'],a:0,why:'En la narrativa transmedia cada plataforma aporta una pieza distinta y complementaria del mismo universo.'},
+  {tema:'Formatos',icon:'fa-file-arrow-down',c:'#a3e635',q:'Necesitás una imagen con fondo transparente y buena calidad para un logo. ¿Qué formato elegís?',o:['.mp3','.jpg','.png','.mkv'],a:2,why:'El .png admite transparencia (canal alfa) y compresión sin pérdida; el .jpg no soporta transparencias.'},
+  {tema:'Hipermedia',icon:'fa-diagram-project',c:'#f472b6',q:'¿Cuál es la diferencia clave entre hipertexto e hipermedia?',o:['El hipertexto es más moderno','La hipermedia suma imagen, audio, video e interacción al texto enlazado','Son exactamente lo mismo','El hipertexto solo existe en papel'],a:1,why:'Hipertexto = texto con enlaces. Hipermedia = hipertexto + multimedia + interactividad.'},
+  {tema:'NTiCx',icon:'fa-microchip',c:'#fbbf24',q:'Subís una foto a una red social y la app la convierte automáticamente a .webp para que cargue más rápido. ¿Qué concepto aparece?',o:['Compresión de datos y elección de formato','Texto lineal','Realidad virtual','Narrativa transmedia'],a:0,why:'Convertir formatos para reducir el peso es compresión: menos datos, misma información, más velocidad.'}
+];
+
+const DECIDER = {
+  q:'¿Qué tipo de contenido querés guardar?',
+  opts:[
+    {l:'Texto',i:'fa-file-lines',c:'#22d3ee',next:{q:'¿Qué necesitás del texto?',opts:[
+      {l:'Que se vea igual en cualquier dispositivo',r:{f:'.pdf',c:'#22d3ee',d:'PDF conserva el diseño en todos lados: ideal para entregar trabajos y documentos oficiales.'}},
+      {l:'Editarlo y darle formato',r:{f:'.docx',c:'#c084fc',d:'Procesador de texto (Word/Docs): permite corregir, comentar y dar estilo.'}},
+      {l:'Publicarlo en una web',r:{f:'.html',c:'#a3e635',d:'HTML es el formato nativo de la Web: se interpreta en cualquier navegador.'}},
+      {l:'Solo texto plano, sin adornos',r:{f:'.txt / .md',c:'#f472b6',d:'Texto plano o Markdown: liviano, compatible y muy usado en programación.'}}]}},
+    {l:'Imagen',i:'fa-image',c:'#a3e635',next:{q:'¿Qué característica es clave?',opts:[
+      {l:'Fondo transparente (logo/sticker)',r:{f:'.png / .webp',c:'#a3e635',d:'Soportan canal alfa (transparencia) sin perder calidad.'}},
+      {l:'Foto con mucho detalle y poco peso',r:{f:'.jpg',c:'#22d3ee',d:'Compresión con pérdida muy eficiente para fotografías.'}},
+      {l:'Animación corta',r:{f:'.gif / .webp animado',c:'#f472b6',d:'Guardan varios cuadros y los reproducen en bucle.'}},
+      {l:'Ícono que se agranda sin pixelarse',r:{f:'.svg',c:'#c084fc',d:'Gráfico vectorial: se describe con fórmulas, no con píxeles. Escala infinito.'}}]}},
+    {l:'Audio',i:'fa-music',c:'#c084fc',next:{q:'¿Para qué lo vas a usar?',opts:[
+      {l:'Compartir música o un podcast',r:{f:'.mp3',c:'#c084fc',d:'Estándar universal: buena calidad con poco peso.'}},
+      {l:'Editar con máxima calidad',r:{f:'.wav / .flac',c:'#22d3ee',d:'Sin pérdida: conserva toda la información sonora para edición profesional.'}},
+      {l:'Nota de voz en mensajería',r:{f:'.opus / .ogg',c:'#a3e635',d:'Optimizados para voz y para transmitir por Internet con pocos datos.'}}]}},
+    {l:'Video',i:'fa-film',c:'#f472b6',next:{q:'¿Dónde lo vas a usar?',opts:[
+      {l:'Subirlo a redes o YouTube',r:{f:'.mp4 (H.264)',c:'#f472b6',d:'El estándar de la Web: compatible con todas las plataformas.'}},
+      {l:'Editarlo en un programa profesional',r:{f:'.mov / .mkv',c:'#c084fc',d:'Contenedores que admiten mayor calidad y varias pistas de audio/subtítulos.'}},
+      {l:'Incrustarlo liviano en una web',r:{f:'.webm',c:'#a3e635',d:'Formato abierto y comprimido, pensado para navegadores.'}}]}}
+  ]
+};
+
+/* ---------- 3) XP, MEDALLAS, NOTIFICACIONES ---------- */
+function addXP(amount, reason=''){
+  AppState.xp += amount;
+  const el = document.getElementById('xp-counter');
+  el.textContent = AppState.xp;
+  el.classList.remove('xp-pop'); void el.offsetWidth; el.classList.add('xp-pop');
+  toast(`+${amount} XP`, reason, 'linear-gradient(135deg,#a3e635,#22d3ee)', '#0f172a','fa-bolt');
+  updateUI(); saveState();
+}
+function toast(title, sub, bg, color, icon){
+  const wrap=document.getElementById('toast-wrap'), el=document.createElement('div');
+  el.className='toast'; el.style.background=bg; el.style.color=color;
+  el.innerHTML=`<div class="flex items-center gap-2"><i class="fas ${icon}"></i><div><p class="text-sm">${title}</p>${sub?`<p class="text-[11px] opacity-80 font-medium">${sub}</p>`:''}</div></div>`;
+  wrap.appendChild(el);
+  setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),400);},2800);
+}
+function unlockMedal(id){
+  if(AppState.medals[id]) return;
+  AppState.medals[id]=true;
+  const m=MEDALS.find(x=>x.id===id);
+  renderMedals();
+  toast('¡Medalla desbloqueada!', m.title, 'linear-gradient(135deg,#c084fc,#f472b6)','#0f172a',`fas ${m.icon}`);
+  addXP(20, `Logro: ${m.title}`);
+  saveState(); updateUI();
+}
+function renderMedals(){
+  document.getElementById('header-medals').innerHTML = MEDALS.map(m=>`
+    <div class="medal ${AppState.medals[m.id]?'unlocked':'locked'} w-9 h-9 rounded-full flex items-center justify-center border-2"
+      style="${AppState.medals[m.id]?`background:linear-gradient(135deg,${m.color},#c084fc);border-color:${m.color};color:#0f172a`:'background:#020617;border-color:#334155;color:#64748b'}"
+      title="${m.title}${AppState.medals[m.id]?' ✓':''}"><i class="fas ${m.icon} text-xs"></i></div>`).join('');
+  document.getElementById('medals-grid').innerHTML = MEDALS.map(m=>`
+    <div class="p-4 rounded-xl bg-ed-darker/50 border border-ed-border text-center neon-hover">
+      <div class="medal ${AppState.medals[m.id]?'unlocked':'locked'} w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-3 border-2"
+        style="${AppState.medals[m.id]?`background:linear-gradient(135deg,${m.color},#c084fc);border-color:${m.color};color:#0f172a`:'background:#0f172a;border-color:#334155;color:#475569'}">
+        <i class="fas ${m.icon} text-2xl"></i></div>
+      <p class="font-display font-bold text-sm leading-tight">${m.title}</p>
+      <p class="text-[11px] text-slate-400 mt-1">${m.desc}</p>
+      <p class="text-[10px] mt-2 font-mono ${AppState.medals[m.id]?'text-neon-lime':'text-slate-500'}">${AppState.medals[m.id]?'DESBLOQUEADA':'BLOQUEADA'}</p>
+    </div>`).join('');
+}
+
+/* ---------- 4) NAVEGACIÓN ---------- */
+function initTabs(){ document.querySelectorAll('.tab-btn').forEach(b=> b.onclick=()=>switchTab(b.dataset.tab)); }
+function switchTab(name){
+  document.querySelectorAll('.tab-content').forEach(s=>s.classList.add('hidden'));
+  const sec=document.getElementById('tab-'+name);
+  if(sec){ sec.classList.remove('hidden','anim-slide'); void sec.offsetWidth; sec.classList.add('anim-slide'); }
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+  AppState.currentTab=name;
+  if(name!=='dashboard'&&name!=='evaluacion'){ AppState.visitedTabs.add(name); checkExplorer(); }
+  updateUI(); saveState(); window.scrollTo({top:0,behavior:'smooth'});
+}
+function checkExplorer(){ if(AppState.visitedTabs.size>=3) unlockMedal('explorador'); }
+
+/* ---------- 5) GRÁFICOS ---------- */
+function renderBars(id,data,opts={}){
+  const el=document.getElementById(id); if(!el) return;
+  const max=opts.max||Math.max(...data.map(d=>d.value));
+  el.innerHTML=data.map(d=>`
+    <div>
+      <div class="flex justify-between text-xs mb-1"><span class="text-slate-300 font-medium">${d.label}</span>
+      <span class="font-mono font-bold" style="color:${d.color}">${d.value}${d.unit||''}</span></div>
+      <div class="h-3 rounded-full bg-ed-darker border border-ed-border overflow-hidden">
+        <div class="bar-fill h-full rounded-full" style="width:0%;background:linear-gradient(90deg,${d.color},${d.color}99);box-shadow:0 0 12px ${d.color}66"></div>
+      </div>
+    </div>`).join('');
+  el.querySelectorAll('.bar-fill').forEach((f,i)=> setTimeout(()=> f.style.width=((data[i].value/max)*100)+'%', 80+i*110));
+}
+function renderDonut(id,legendId,data){
+  const el=document.getElementById(id); if(!el) return;
+  const size=190,stroke=26,r=(size-stroke)/2,C=2*Math.PI*r,total=data.reduce((s,d)=>s+d.value,0);
+  let off=0;
+  const segs=data.map(d=>{
+    const len=(d.value/total)*C, cur=off; off+=len;
+    return `<circle class="donut-seg" cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${d.color}" stroke-width="${stroke}"
+      stroke-dasharray="0 ${C}" data-len="${len}" transform="rotate(-90 ${size/2} ${size/2})" opacity=".92"></circle>`;
+  }).join('');
+  el.innerHTML=`<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" class="max-w-full">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#1e293b" stroke-width="${stroke}"/>${segs}
+    <text x="50%" y="47%" text-anchor="middle" font-family="Space Grotesk Variable" font-size="26" font-weight="700" fill="#e2e8f0">100%</text>
+    <text x="50%" y="60%" text-anchor="middle" font-family="Inter Variable" font-size="10" fill="#94a3b8">de tu feed</text></svg>`;
+  el.querySelectorAll('.donut-seg').forEach((c,i)=> setTimeout(()=> c.setAttribute('stroke-dasharray',`${c.dataset.len} ${C-c.dataset.len}`),120+i*140));
+  if(legendId) document.getElementById(legendId).innerHTML=data.map(d=>`
+    <div class="flex items-center justify-between gap-3">
+      <span class="flex items-center gap-2 text-slate-300"><span class="w-3 h-3 rounded-sm" style="background:${d.color};box-shadow:0 0 8px ${d.color}"></span>${d.label}</span>
+      <span class="font-mono font-bold" style="color:${d.color}">${d.value}%</span></div>`).join('');
+}
+function countUp(el,to){
+  const from=parseInt(el.textContent)||0,dur=700,t0=performance.now();
+  const step=t=>{const p=Math.min((t-t0)/dur,1);el.textContent=Math.round(from+(to-from)*p);if(p<1)requestAnimationFrame(step);};
+  requestAnimationFrame(step);
+}
+function updateUI(){
+  document.getElementById('xp-counter').textContent=AppState.xp;
+  countUp(document.getElementById('stat-xp'),AppState.xp);
+  document.getElementById('stat-medals').textContent=Object.values(AppState.medals).filter(Boolean).length;
+  document.getElementById('stat-tabs').textContent=AppState.visitedTabs.size;
+  document.getElementById('stat-trivia').textContent=AppState.trivia.correct;
+  renderMedals();
+
+  const total=9; let done=AppState.visitedTabs.size;
+  if(AppState.activities.multimedia) done++;
+  if(AppState.activities.platforms.size>=3) done++;
+  if(AppState.activities.hyperModes.size>=3&&AppState.activities.spectrum) done++;
+  if(AppState.activities.decider) done++;
+  const pct=Math.min(100,Math.round(done/total*100));
+  document.getElementById('progress-bar').style.width=pct+'%';
+  document.getElementById('progress-percent').textContent=pct;
+
+  const chip=document.getElementById('st-chip');
+  if(AppState.student.nombre){ chip.classList.remove('hidden'); chip.classList.add('xl:flex'); document.getElementById('st-chip-name').textContent=AppState.student.nombre; }
+}
+
+/* ---------- 6A) MULTIMEDIA ---------- */
+function initMultimedia(){
+  document.getElementById('comp-list').innerHTML=COMPONENTS.map(c=>`
+    <div class="flex items-start gap-3 p-3 rounded-xl bg-ed-darker/50 border border-ed-border neon-hover">
+      <i class="fas ${c.icon} text-xl mt-0.5" style="color:${c.color}"></i>
+      <div class="flex-1"><p class="font-bold text-sm">${c.name}</p><p class="text-xs text-slate-400">${c.ex}</p>
+      <p class="text-[11px] font-mono mt-1" style="color:${c.color}">${c.ext}</p></div>
+    </div>`).join('');
+
+  document.getElementById('mm-casos').innerHTML=MM_CASES.map(c=>`
+    <div class="p-3 rounded-xl bg-ed-darker/50 border border-ed-border flex items-start gap-3">
+      <i class="fas ${c.i} text-xl mt-1" style="color:${c.c}"></i>
+      <div class="flex-1"><p class="font-bold text-sm">${c.t}</p><p class="text-xs text-slate-400">${c.d}</p>
+      <div class="flex gap-1 mt-1.5">${c.medios.map(m=>`<span class="text-[10px] px-1.5 py-0.5 rounded bg-ed-card border border-ed-border font-mono">${m}</span>`).join('')}</div></div>
+    </div>`).join('');
+
+  renderBars('chart-retencion',CHARTS.retencion,{max:100});
+  COMPONENTS.forEach(c=> document.getElementById('tg-'+c.id).addEventListener('change',syncSimulator));
+  document.querySelectorAll('.layer').forEach(l=>{
+    l.style.cursor='pointer';
+    l.onclick=()=>{ const tg=document.getElementById('tg-'+l.dataset.layer); tg.checked=!tg.checked; syncSimulator(); };
+  });
+  document.getElementById('btn-sim-done').onclick=()=>{
+    if(AppState.activities.multimedia) return;
+    AppState.activities.multimedia=true; addXP(15,'Simulador multimedia completado'); unlockMedal('multimedia');
+    markSimDone(); saveState(); updateUI();
+  };
+  drawWave(false); initPlayers(); syncSimulator();
+  if(AppState.activities.multimedia) markSimDone();
+}
+function markSimDone(){
+  const b=document.getElementById('btn-sim-done');
+  b.innerHTML='<i class="fas fa-circle-check mr-2"></i>¡Simulador completado!';
+  b.disabled=true; b.classList.add('opacity-60','cursor-not-allowed');
+}
+function syncSimulator(){
+  let active=0;
+  COMPONENTS.forEach(c=>{
+    const on=document.getElementById('tg-'+c.id).checked;
+    document.getElementById('sc-'+c.id).classList.toggle('hidden',!on);
+    const ly=document.querySelector(`.layer[data-layer="${c.id}"]`); if(ly) ly.classList.toggle('off',!on);
+    if(on) active++;
+  });
+  document.getElementById('sc-empty').classList.toggle('hidden',active>0);
+  document.getElementById('sim-dots').innerHTML=COMPONENTS.map(c=>{
+    const on=document.getElementById('tg-'+c.id).checked;
+    return `<span class="h-2.5 flex-1 rounded-full transition" style="background:${on?c.color:'#1e293b'};box-shadow:${on?`0 0 10px ${c.color}`:'none'}"></span>`;
+  }).join('');
+  const map=[{t:'Sin contenido',c:'#64748b'},{t:'Unimedia (un medio)',c:'#22d3ee'},{t:'Multimedia básica',c:'#c084fc'},{t:'Multimedia avanzada',c:'#a3e635'},{t:'Multimedia completa',c:'#f472b6'}];
+  const b=document.getElementById('sim-badge');
+  b.textContent=map[active].t; b.style.color=map[active].c; b.style.borderColor=map[active].c; b.style.background='rgba(15,23,42,.6)';
+  const pct=Math.round(active/4*100);
+  document.getElementById('sim-richness').style.width=pct+'%';
+  document.getElementById('sim-rich-txt').textContent=pct+'%';
+}
+function drawWave(active){
+  const svg=document.getElementById('wave'); if(!svg) return;
+  let bars='';
+  for(let i=0;i<60;i++){
+    const h=active?6+Math.abs(Math.sin(i*0.55))*28+Math.random()*8:4+Math.abs(Math.sin(i*0.5))*8;
+    bars+=`<rect x="${i*5}" y="${20-h/2}" width="3" height="${h}" rx="1.5" fill="${active?'#a3e635':'#334155'}"/>`;
+  }
+  svg.innerHTML=bars;
+}
+function initPlayers(){
+  let wt=null;
+  document.getElementById('btn-play').onclick=function(){
+    const ic=this.querySelector('i');
+    if(ic.classList.contains('fa-play')){ ic.className='fas fa-pause'; drawWave(true); wt=setInterval(()=>drawWave(true),320); }
+    else { ic.className='fas fa-play'; clearInterval(wt); drawWave(false); }
+  };
+  document.getElementById('btn-vid').onclick=function(){
+    const ic=this.querySelector('i'),bar=document.getElementById('vid-bar');
+    if(ic.classList.contains('fa-play')){ ic.className='fas fa-pause'; let w=parseFloat(bar.style.width)||0; this.dataset.t=setInterval(()=>{w+=1.2;bar.style.width=Math.min(100,w)+'%';},90); }
+    else { ic.className='fas fa-play'; clearInterval(this.dataset.t); }
+  };
+}
+
+/* ---------- 6B) NUEVOS LENGUAJES ---------- */
+function initLanguages(){
+  document.getElementById('lang-grid').innerHTML=LANGUAGES.map(l=>`
+    <div class="glass rounded-2xl p-5 neon-hover group">
+      <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition" style="background:${l.c}22;border:1px solid ${l.c}66">
+        <i class="fas ${l.icon} text-2xl" style="color:${l.c}"></i></div>
+      <h3 class="font-display text-lg font-bold mb-1">${l.t}</h3>
+      <p class="text-sm text-slate-400 mb-3 leading-relaxed">${l.d}</p>
+      <p class="text-[11px] text-slate-500 mb-3"><i class="fas fa-location-dot mr-1" style="color:${l.c}"></i>${l.ex}</p>
+      <div class="flex flex-wrap gap-1">${l.tags.map(t=>`<span class="text-[10px] px-2 py-0.5 rounded-full border" style="color:${l.c};border-color:${l.c}55;background:${l.c}15">${t}</span>`).join('')}</div>
+    </div>`).join('');
+
+  document.getElementById('timeline').innerHTML=TIMELINE.map((e,i)=>`
+    <div class="relative w-56 shrink-0">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="w-9 h-9 rounded-full flex items-center justify-center border-2" style="border-color:${e.c};background:${e.c}22"><i class="fas ${e.i} text-sm" style="color:${e.c}"></i></span>
+        ${i<TIMELINE.length-1?`<span class="flex-1 h-0.5" style="background:linear-gradient(90deg,${e.c},transparent)"></span>`:''}
+      </div>
+      <p class="font-mono text-xs font-bold" style="color:${e.c}">${e.y}</p>
+      <p class="font-display font-bold text-sm">${e.t}</p>
+      <p class="text-[11px] text-slate-400 leading-snug mt-1">${e.d}</p>
+    </div>`).join('');
+
+  document.querySelectorAll('.hotspot').forEach(h=>{
+    const show=()=>{
+      document.querySelectorAll('.meme-zone').forEach(z=>z.classList.remove('hl'));
+      const z=document.getElementById(h.dataset.zone); if(z) z.classList.add('hl');
+      document.getElementById('meme-info').innerHTML=`<i class="fas fa-circle-info text-neon-lime mr-1"></i>${h.dataset.info}`;
+    };
+    h.addEventListener('mouseenter',show); h.addEventListener('click',show);
+  });
+  document.querySelectorAll('.tx-node').forEach(n=> n.addEventListener('click',()=>{
+    document.getElementById('tx-info').innerHTML=`<i class="fas fa-diagram-project text-neon-purple mr-1"></i>${n.dataset.info}`;
+  }));
+  renderBars('chart-duracion',CHARTS.duracion);
+}
+
+/* ---------- 6C) FORMATOS ---------- */
+function initFormats(){
+  document.getElementById('format-cards').innerHTML=FORMATS.map(f=>`
+    <div class="flip-card"><div class="flip-inner">
+      <div class="flip-face glass p-5 flex flex-col justify-between" style="border-color:${f.c}55">
+        <div>
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-3" style="background:${f.c}22;border:1px solid ${f.c}66"><i class="fas ${f.i} text-2xl" style="color:${f.c}"></i></div>
+          <h3 class="font-display text-xl font-bold mb-1" style="color:${f.c}">${f.t}</h3>
+          <p class="text-sm text-slate-400">${f.d}</p>
+        </div>
+        <div><p class="text-[10px] uppercase tracking-widest text-slate-500 mb-2">Extensiones</p>
+        <div class="flex flex-wrap gap-1">${f.ext.map(e=>`<span class="text-[11px] px-2 py-0.5 rounded font-mono" style="background:${f.c}1f;color:${f.c};border:1px solid ${f.c}44">${e}</span>`).join('')}</div>
+        <p class="text-[10px] text-slate-500 mt-3"><i class="fas fa-rotate mr-1"></i>Pasá el mouse para ver ejemplos</p></div>
+      </div>
+      <div class="flip-face flip-back p-5 flex flex-col justify-center" style="background:linear-gradient(160deg,${f.c}22,#0f172a);border:2px solid ${f.c}">
+        <h4 class="font-display font-bold mb-2" style="color:${f.c}"><i class="fas fa-list-check mr-1"></i>Ejemplos reales</h4>
+        <ul class="text-sm space-y-1.5 text-slate-200">${f.ex.map(e=>`<li>• ${e}</li>`).join('')}</ul>
+        <p class="text-[11px] mt-3 p-2 rounded-lg bg-black/30 border border-white/10"><i class="fas fa-lightbulb mr-1" style="color:${f.c}"></i>${f.real}</p>
+      </div>
+    </div></div>`).join('');
+
+  const tabsEl=document.getElementById('size-tabs');
+  Object.keys(FILE_SIZES).forEach((k,i)=>{
+    const b=document.createElement('button');
+    b.className='px-3 py-1.5 rounded-xl text-xs font-bold border transition '+(i===0?'border-neon-cyan bg-neon-cyan/15 text-neon-cyan':'border-ed-border bg-ed-darker/50 text-slate-300 hover:border-neon-cyan');
+    b.textContent=k;
+    b.onclick=()=>{
+      [...tabsEl.children].forEach(x=>x.className='px-3 py-1.5 rounded-xl text-xs font-bold border transition border-ed-border bg-ed-darker/50 text-slate-300 hover:border-neon-cyan');
+      b.className='px-3 py-1.5 rounded-xl text-xs font-bold border transition border-neon-cyan bg-neon-cyan/15 text-neon-cyan';
+      renderBars('chart-peso',FILE_SIZES[k]);
+    };
+    tabsEl.appendChild(b);
+  });
+  renderBars('chart-peso',FILE_SIZES[Object.keys(FILE_SIZES)[0]]);
+
+  const colorFor=t=>({'Textual':'#22d3ee','Sonora':'#c084fc','Visual':'#a3e635','Audiovisual':'#f472b6'}[t]||'#94a3b8');
+  document.getElementById('ext-table').innerHTML=EXT_TABLE.map(([e,t,c,r])=>`
+    <tr class="border-b border-ed-border/40 hover:bg-ed-darker/50 transition">
+      <td class="py-2 px-3 font-mono font-bold" style="color:${colorFor(t)}">${e}</td>
+      <td class="py-2 px-3">${t}</td><td class="py-2 px-3 text-slate-400">${c}</td><td class="py-2 px-3 text-slate-300">${r}</td></tr>`).join('');
+
+  renderDecider(DECIDER,true);
+}
+function renderDecider(node,isRoot){
+  const box=document.getElementById('decider');
+  if(node.r){
+    box.innerHTML=`
+      <div class="p-5 rounded-xl bg-ed-darker/70 border-2 anim-slide" style="border-color:${node.r.c}">
+        <p class="text-[11px] uppercase tracking-widest text-slate-400 mb-2">Formato recomendado</p>
+        <p class="font-display text-3xl font-bold font-mono mb-2" style="color:${node.r.c}">${node.r.f}</p>
+        <p class="text-sm text-slate-300">${node.r.d}</p>
+        <button id="dec-again" class="mt-4 px-4 py-2 rounded-xl text-xs font-bold border transition" style="border-color:${node.r.c};color:${node.r.c}"><i class="fas fa-rotate-right mr-1"></i>Volver a empezar</button>
+      </div>`;
+    box.querySelector('#dec-again').onclick=()=>renderDecider(DECIDER,true);
+    if(!AppState.activities.decider){ AppState.activities.decider=true; addXP(10,'Usaste el asistente de formatos'); saveState(); updateUI(); }
+    return;
+  }
+  box.innerHTML=`
+    <div class="anim-fade">
+      <p class="font-display font-bold text-base mb-3">${node.q}</p>
+      <div class="space-y-2">${node.opts.map((o,i)=>`
+        <button data-i="${i}" class="dec-opt w-full text-left p-3 rounded-xl bg-ed-darker/60 border-2 border-ed-border hover:border-neon-cyan transition flex items-center gap-3 text-sm">
+          ${o.i?`<i class="fas ${o.i} w-5" style="color:${o.c||'#22d3ee'}"></i>`:`<span class="w-6 h-6 rounded-full bg-ed-card flex items-center justify-center font-mono text-xs">${String.fromCharCode(65+i)}</span>`}
+          <span>${o.l}</span></button>`).join('')}</div>
+      ${isRoot?'':'<button id="dec-back" class="mt-3 text-xs text-slate-400 hover:text-neon-cyan transition"><i class="fas fa-arrow-left mr-1"></i>Volver</button>'}
+    </div>`;
+  box.querySelectorAll('.dec-opt').forEach(b=> b.onclick=()=>renderDecider(node.opts[+b.dataset.i].next||node.opts[+b.dataset.i],false));
+  const back=box.querySelector('#dec-back'); if(back) back.onclick=()=>renderDecider(DECIDER,true);
+}
+
+/* ---------- 6D) HIPERMEDIA ---------- */
+function initHypermedia(){
+  const cards=[
+    {t:'Texto lineal',i:'fa-align-left',c:'#22d3ee',d:'Un solo camino de lectura, de principio a fin.',ex:'Ej: un libro, una carta, un cuento impreso.',niv:1},
+    {t:'Hipertexto',i:'fa-link',c:'#c084fc',d:'Texto con enlaces: el lector decide el recorrido.',ex:'Ej: Wikipedia, una noticia con links.',niv:3},
+    {t:'Hipermedia',i:'fa-diagram-project',c:'#a3e635',d:'Hipertexto + imagen + audio + video + interacción.',ex:'Ej: videojuegos, Google Maps, esta web.',niv:5}
+  ];
+  document.getElementById('hyper-cards').innerHTML=cards.map(c=>`
+    <div class="glass rounded-2xl p-5 neon-hover">
+      <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-3" style="background:${c.c}22;border:1px solid ${c.c}66"><i class="fas ${c.i} text-xl" style="color:${c.c}"></i></div>
+      <h3 class="font-display text-lg font-bold">${c.t}</h3><p class="text-sm text-slate-400 mt-1">${c.d}</p>
+      <p class="text-xs mt-2" style="color:${c.c}">${c.ex}</p>
+      <div class="mt-3 flex gap-1">${[1,2,3,4,5].map(n=>`<span class="h-1.5 flex-1 rounded-full" style="background:${n<=c.niv?c.c:'#1e293b'}"></span>`).join('')}</div>
+      <p class="text-[10px] text-slate-500 mt-1.5">Interactividad ${c.niv}/5</p>
+    </div>`).join('');
+
+  document.getElementById('hyper-casos').innerHTML=HYPER_CASES.map(c=>`
+    <div class="p-4 rounded-xl bg-ed-darker/50 border border-ed-border flex items-start gap-3 neon-hover">
+      <i class="${c.i} text-2xl mt-1" style="color:${c.c}"></i>
+      <div><p class="font-bold text-sm">${c.t}</p><p class="text-xs text-slate-400 mt-1 leading-relaxed">${c.d}</p></div>
+    </div>`).join('');
+
+  renderBars('chart-interactividad',CHARTS.interactividad,{max:5});
+
+  document.querySelectorAll('.mode-btn').forEach(b=> b.onclick=()=>{
+    document.querySelectorAll('.mode-btn').forEach(x=>x.className='mode-btn py-3 px-3 rounded-xl border-2 border-ed-border bg-ed-darker/50 text-slate-300 font-bold text-xs md:text-sm');
+    b.className='mode-btn active py-3 px-3 rounded-xl border-2 border-neon-cyan bg-neon-cyan/15 text-neon-cyan font-bold text-xs md:text-sm';
+    renderHyperMode(b.dataset.mode);
+    AppState.activities.hyperModes.add(b.dataset.mode); checkNavegante(); saveState();
+  });
+
+  const sp=document.getElementById('spectrum');
+  const paint=()=>{
+    const s=SPECTRUM[+sp.value];
+    document.getElementById('spectrum-card').innerHTML=`
+      <div class="flex items-center gap-4">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0" style="background:${s.c}22;border:1px solid ${s.c}66"><i class="fas ${s.i} text-2xl" style="color:${s.c}"></i></div>
+        <div><p class="font-display text-lg font-bold" style="color:${s.c}">${s.t}</p>
+        <p class="text-[11px] text-slate-400">Nivel de interactividad: <strong style="color:${s.c}">${s.niv}</strong></p></div>
+      </div>
+      <p class="text-sm text-slate-300 mt-3 leading-relaxed">${s.d}</p>`;
+    AppState.activities.spectrum=true; checkNavegante(); saveState();
+  };
+  sp.addEventListener('input',paint); paint();
+  renderHyperMode('lineal');
+}
+function checkNavegante(){ if(AppState.activities.hyperModes.size>=3&&AppState.activities.spectrum) unlockMedal('navegante'); updateUI(); }
+
+function renderHyperMode(mode){
+  const stage=document.getElementById('hyper-stage'),desc=document.getElementById('hyper-desc'),badge=document.getElementById('hyper-badge');
+  const setBadge=(t,c)=>{badge.textContent=t;badge.style.color=c;badge.style.borderColor=c;badge.style.background='rgba(2,6,23,.6)';};
+
+  if(mode==='lineal'){
+    setBadge('Interactividad: baja','#22d3ee');
+    stage.innerHTML=`<article class="max-w-2xl mx-auto anim-fade">
+      <h4 class="font-display text-2xl font-bold text-neon-cyan mb-3">${HYPER.titulo}</h4>
+      ${HYPER.parrafos.map((p,i)=>`<p class="text-slate-300 leading-relaxed mb-3"><span class="font-mono text-xs text-slate-500 mr-2">${i+1}.</span>${p}</p>`).join('')}
+      <div class="p-3 rounded-lg bg-neon-cyan/10 border border-neon-cyan/30 text-xs text-slate-300"><i class="fas fa-arrow-down text-neon-cyan mr-1"></i>Único recorrido posible: párrafo 1 → 2 → 3.</div></article>`;
+    desc.innerHTML=`<strong class="text-neon-cyan">Texto lineal:</strong> la información tiene un orden fijo impuesto por el autor. Es el modelo del libro impreso.`;
+  }
+  if(mode==='hipertexto'){
+    setBadge('Interactividad: media','#c084fc');
+    const link=(id,txt)=>`<a href="#" class="hx-link font-semibold underline decoration-dotted hover:text-neon-lime transition" style="color:#22d3ee" data-id="${id}">${txt}</a>`;
+    stage.innerHTML=`<article class="max-w-3xl mx-auto anim-fade">
+      <h4 class="font-display text-2xl font-bold text-neon-purple mb-3">${HYPER.titulo}</h4>
+      <p class="text-slate-300 leading-relaxed mb-3">La ${link('web','World Wide Web')} nació en 1989 en el CERN gracias a ${link('browser','Tim Berners-Lee')}, que combinó el lenguaje ${link('html','HTML')} con el protocolo ${link('http','HTTP')} y las direcciones ${link('url','URL')}.</p>
+      <p class="text-slate-300 leading-relaxed mb-3">Su objetivo era compartir información entre científicos de forma sencilla. Hoy la Web es el principal medio de comunicación global y la base de todas las ${link('web','plataformas que usás a diario')}.</p>
+      <div class="p-3 rounded-lg bg-neon-purple/10 border border-neon-purple/30 text-xs text-slate-300 mb-3"><i class="fas fa-hand-pointer text-neon-purple mr-1"></i>Hacé clic en las palabras resaltadas: vos elegís el recorrido.</div>
+      <div id="hx-panel" class="hidden p-4 rounded-xl bg-ed-card border border-neon-cyan/50 anim-slide"><p id="hx-title" class="font-display font-bold text-neon-cyan mb-1"></p><p id="hx-text" class="text-sm text-slate-300"></p></div>
+    </article>`;
+    stage.querySelectorAll('.hx-link').forEach(a=> a.onclick=e=>{
+      e.preventDefault();
+      const n=HYPER.nodos.find(x=>x.id===a.dataset.id)||HYPER.nodos[0];
+      document.getElementById('hx-title').textContent=n.label;
+      document.getElementById('hx-text').textContent=n.info;
+      const p=document.getElementById('hx-panel'); p.classList.remove('hidden','anim-slide'); void p.offsetWidth; p.classList.add('anim-slide');
+    });
+    desc.innerHTML=`<strong class="text-neon-purple">Hipertexto:</strong> el texto contiene <em>enlaces</em> que permiten saltar a otros documentos. El lector construye su propio recorrido.`;
+  }
+  if(mode==='hipermedia'){
+    setBadge('Interactividad: alta','#a3e635');
+    const nodes=HYPER.nodos;
+    const lines=HYPER.lineas.map(([a,b])=>{const n1=nodes.find(n=>n.id===a),n2=nodes.find(n=>n.id===b);
+      return `<line class="dash-line" x1="${n1.x}%" y1="${n1.y}%" x2="${n2.x}%" y2="${n2.y}%" stroke="#334155" stroke-width="2"/>`;}).join('');
+    const dots=nodes.map(n=>`
+      <div class="node absolute w-[86px] h-[86px] rounded-2xl flex flex-col items-center justify-center text-center p-1"
+        style="left:${n.x}%;top:${n.y}%;transform:translate(-50%,-50%);background:rgba(15,23,42,.92);border:2px solid ${n.c};color:${n.c};box-shadow:0 0 18px ${n.c}44" data-id="${n.id}">
+        <span class="font-display font-bold text-xs">${n.label}</span><span class="text-[9px] text-slate-400 mt-0.5">tocar</span></div>`).join('');
+    stage.innerHTML=`<div class="anim-fade">
+      <div class="relative w-full h-[330px] rounded-xl bg-ed-dark border border-ed-border overflow-hidden"><svg class="absolute inset-0 w-full h-full">${lines}</svg>${dots}</div>
+      <div id="hm-panel" class="hidden mt-4 p-4 rounded-xl border anim-slide" style="background:rgba(163,230,53,.08);border-color:rgba(163,230,53,.5)">
+        <p id="hm-title" class="font-display font-bold text-neon-lime mb-1"></p><p id="hm-text" class="text-sm text-slate-200"></p></div></div>`;
+    stage.querySelectorAll('.node').forEach(nd=> nd.onclick=()=>{
+      const n=nodes.find(x=>x.id===nd.dataset.id);
+      document.getElementById('hm-title').textContent=n.label;
+      document.getElementById('hm-text').textContent=n.info;
+      const p=document.getElementById('hm-panel'); p.classList.remove('hidden','anim-slide'); void p.offsetWidth; p.classList.add('anim-slide');
+    });
+    desc.innerHTML=`<strong class="text-neon-lime">Hipermedia:</strong> hipertexto + multimedia + interactividad. Cada nodo puede contener texto, imagen, audio o video.`;
+  }
+}
+
+/* ---------- 6E) CONTEXTOS REALES ---------- */
+let ctxFilter='Todas';
+function initPlatforms(){
+  const cats=['Todas',...new Set(PLATFORMS.map(p=>p.cat))];
+  document.getElementById('ctx-filters').innerHTML=cats.map(c=>`
+    <button data-cat="${c}" class="ctx-f px-3 py-1.5 rounded-full text-xs font-bold border transition ${c==='Todas'?'border-neon-cyan bg-neon-cyan/15 text-neon-cyan':'border-ed-border bg-ed-darker/50 text-slate-300 hover:border-neon-cyan'}">${c}</button>`).join('');
+  document.querySelectorAll('.ctx-f').forEach(b=> b.onclick=()=>{
+    ctxFilter=b.dataset.cat;
+    document.querySelectorAll('.ctx-f').forEach(x=>x.className='ctx-f px-3 py-1.5 rounded-full text-xs font-bold border transition border-ed-border bg-ed-darker/50 text-slate-300 hover:border-neon-cyan');
+    b.className='ctx-f px-3 py-1.5 rounded-full text-xs font-bold border transition border-neon-cyan bg-neon-cyan/15 text-neon-cyan';
+    paintPlatforms();
+  });
+  paintPlatforms();
+  document.getElementById('ctx-print').innerHTML=`<h3>Contextos reales: plataformas analizadas</h3>
+    ${PLATFORMS.map(p=>`<p style="margin-bottom:6px"><strong>${p.n}</strong> (${p.cat}) — ${p.d} Formatos: ${p.f.join(', ')}. Concepto: ${p.l}. Actividad: ${p.t}</p>`).join('')}`;
+}
+function paintPlatforms(){
+  const list=ctxFilter==='Todas'?PLATFORMS:PLATFORMS.filter(p=>p.cat===ctxFilter);
+  document.getElementById('ctx-grid').innerHTML=list.map(p=>{
+    const idx=PLATFORMS.indexOf(p), seen=AppState.activities.platforms.has(p.n);
+    return `<button data-i="${idx}" class="ctx-card glass rounded-2xl p-4 text-left neon-hover relative">
+      ${seen?'<span class="absolute top-3 right-3 text-[10px] px-2 py-0.5 rounded-full bg-neon-lime/20 text-neon-lime border border-neon-lime/40"><i class="fas fa-check mr-1"></i>visto</span>':''}
+      <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-3" style="background:${p.c}22;border:1px solid ${p.c}66"><i class="${p.i} text-2xl" style="color:${p.c}"></i></div>
+      <p class="font-display font-bold">${p.n}</p><p class="text-[11px] uppercase tracking-wider text-slate-500 mb-2">${p.cat}</p>
+      <p class="text-xs text-slate-400 mb-3">${p.l}</p>
+      <div class="flex flex-wrap gap-1">${p.f.slice(0,3).map(f=>`<span class="text-[10px] px-1.5 py-0.5 rounded font-mono" style="background:${p.c}1f;color:${p.c}">${f}</span>`).join('')}</div>
+    </button>`;
+  }).join('');
+  document.querySelectorAll('.ctx-card').forEach(c=> c.onclick=()=>openPlatform(+c.dataset.i));
+}
+function openPlatform(i){
+  const p=PLATFORMS[i];
+  const ic=document.getElementById('m-icon');
+  ic.style.cssText=`background:${p.c}22;border:1px solid ${p.c}66;color:${p.c}`;
+  ic.innerHTML=`<i class="${p.i}"></i>`;
+  document.getElementById('m-name').textContent=p.n;
+  document.getElementById('m-cat').textContent=p.cat;
+  document.getElementById('m-desc').textContent=p.d;
+  document.getElementById('m-lang').textContent=p.l;
+  document.getElementById('m-task').textContent=p.t;
+  document.getElementById('m-formats').innerHTML=p.f.map(f=>`<span class="text-[11px] px-2 py-1 rounded font-mono" style="background:${p.c}1f;color:${p.c};border:1px solid ${p.c}44">${f}</span>`).join('');
+  document.getElementById('modal').classList.remove('hidden'); document.body.style.overflow='hidden';
+  const first=!AppState.activities.platforms.has(p.n);
+  AppState.activities.platforms.add(p.n);
+  if(first){ addXP(5,`Analizaste ${p.n}`); if(AppState.activities.platforms.size>=3) unlockMedal('cazadorDatos'); }
+  paintPlatforms(); updateUI(); saveState();
+}
+function closeModal(){ document.getElementById('modal').classList.add('hidden'); document.body.style.overflow=''; }
+
+/* ---------- 7) TRIVIA ---------- */
+function initTrivia(){
+  document.getElementById('trivia-wrap').innerHTML=QUIZ.map((q,i)=>`
+    <div class="glass rounded-2xl p-6 card-print" id="q-${i}">
+      <div class="flex items-start gap-3 mb-4">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style="background:${q.c}22;border:1px solid ${q.c}66"><i class="fas ${q.icon}" style="color:${q.c}"></i></div>
+        <div><p class="text-[10px] uppercase tracking-[.2em] mb-0.5" style="color:${q.c}">Pregunta ${i+1} · ${q.tema}</p>
+        <h4 class="font-display font-bold text-lg leading-snug">${q.q}</h4></div>
+      </div>
+      <div class="space-y-2">${q.o.map((o,j)=>`
+        <button data-q="${i}" data-o="${j}" class="opt w-full text-left p-3 rounded-xl bg-ed-darker/60 border-2 border-ed-border text-sm flex items-start gap-3">
+          <span class="w-6 h-6 rounded-full bg-ed-card border border-ed-border flex items-center justify-center font-mono text-xs shrink-0">${String.fromCharCode(65+j)}</span><span>${o}</span>
+        </button>`).join('')}</div>
+      <div id="fb-${i}" class="hidden mt-4 p-3 rounded-xl text-sm"></div>
+    </div>`).join('');
+  document.getElementById('quiz-dots').innerHTML=QUIZ.map((_,i)=>`<span class="w-3 h-3 rounded-full bg-ed-border" id="dot-${i}"></span>`).join('');
+  document.querySelectorAll('#trivia-wrap .opt').forEach(b=> b.onclick=()=>answerQuiz(+b.dataset.q,+b.dataset.o));
+}
+
+/* Pinta el resultado visual de una pregunta (se usa al responder y al restaurar) */
+function paintAnswer(qi,oi){
+  const q=QUIZ[qi],card=document.getElementById('q-'+qi),fb=document.getElementById('fb-'+qi);
+  if(!card) return false;
+  const btns=card.querySelectorAll('.opt');
+  btns.forEach(b=>{b.disabled=true;b.classList.add('opacity-70','cursor-not-allowed');});
+  btns[q.a].classList.remove('border-ed-border','opacity-70');
+  btns[q.a].classList.add('border-neon-lime','bg-neon-lime/15','opacity-100');
+  const ok=oi===q.a;
+  if(!ok && btns[oi]){ btns[oi].classList.remove('border-ed-border'); btns[oi].classList.add('border-red-500','bg-red-500/15'); }
+  fb.className=`mt-4 p-3 rounded-xl text-sm border ${ok?'bg-neon-lime/10 border-neon-lime/50 text-neon-lime':'bg-red-500/10 border-red-500/50 text-red-400'}`;
+  fb.innerHTML=`<p class="font-bold mb-1"><i class="fas ${ok?'fa-circle-check':'fa-circle-xmark'} mr-1"></i>${ok?'¡Correcto!':'Incorrecto'}</p>
+    <p class="text-slate-300 font-normal"><i class="fas fa-lightbulb mr-1 text-neon-amber"></i>${q.why}</p>`;
+  fb.classList.remove('hidden');
+  const dot=document.getElementById('dot-'+qi);
+  if(dot){ dot.style.background=ok?'#a3e635':'#ef4444'; dot.style.boxShadow=`0 0 10px ${ok?'#a3e635':'#ef4444'}`; }
+  return ok;
+}
+
+function answerQuiz(qi,oi){
+  if(AppState.trivia.answered.includes(qi)) return;
+  const ok=paintAnswer(qi,oi);
+  AppState.trivia.choices[qi]=oi;
+  AppState.trivia.answered.push(qi);
+  if(ok){ AppState.trivia.correct++; addXP(20,`Pregunta ${qi+1} correcta`); }
+  document.getElementById('quiz-score').textContent=AppState.trivia.correct;
+  saveState(); updateUI();
+  if(AppState.trivia.answered.length===QUIZ.length) setTimeout(()=>showQuizResult(true),1200);
+}
+
+function showQuizResult(award){
+  const c=AppState.trivia.correct;
+  document.getElementById('quiz-final').textContent=c;
+  document.getElementById('quiz-xp').textContent=c*20;
+  document.getElementById('quiz-msg').innerHTML=c>=3
+    ? 'Aprobaste la evaluación y desbloqueaste el estado de <strong class="text-neon-pink">Ciudadano/a Digital Experto</strong>.'
+    : 'Necesitás <strong>3 o más correctas</strong> para desbloquear el logro. Revisá las explicaciones y volvé a intentarlo.';
+  document.getElementById('quiz-review').innerHTML=QUIZ.map((q,i)=>`
+    <div class="p-3 rounded-xl bg-ed-darker/60 border border-ed-border">
+      <p class="text-xs font-bold" style="color:${q.c}"><i class="fas ${q.icon} mr-1"></i>${q.tema}</p>
+      <p class="text-sm mt-1">${q.q}</p>
+      <p class="text-xs text-neon-lime mt-1"><i class="fas fa-check mr-1"></i>Correcta: ${q.o[q.a]}</p>
+      <p class="text-[11px] text-slate-400 mt-1">${q.why}</p>
+    </div>`).join('');
+  document.getElementById('quiz-result').classList.remove('hidden');
+  const top=document.getElementById('btn-pdf-top');
+  top.disabled=false; top.classList.remove('opacity-40','cursor-not-allowed');
+  AppState.trivia.finished=true;
+  if(award && c>=3) unlockMedal('ciudadano');
+  saveState(); updateUI();
+  setTimeout(()=>document.getElementById('quiz-result').scrollIntoView({behavior:'smooth'}),200);
+}
+
+function resetTrivia(){
+  AppState.trivia={choices:{},answered:[],correct:0,finished:false};
+  document.getElementById('quiz-result').classList.add('hidden');
+  document.getElementById('quiz-score').textContent=0;
+  const top=document.getElementById('btn-pdf-top'); top.disabled=true; top.classList.add('opacity-40','cursor-not-allowed');
+  initTrivia(); saveState(); updateUI(); window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* Restaura una evaluación ya respondida (por ejemplo al recargar la página) */
+function applyQuizState(){
+  Object.keys(AppState.trivia.choices).forEach(qi=> paintAnswer(+qi,AppState.trivia.choices[qi]));
+  document.getElementById('quiz-score').textContent=AppState.trivia.correct;
+  if(AppState.trivia.finished) showQuizResult(false);
+}
+
+/* ---------- 8) DATOS DEL ESTUDIANTE + EXPORTACIÓN PDF ---------- */
+function readStudent(){
+  return {
+    nombre: document.getElementById('st-nombre').value.trim(),
+    escuela:document.getElementById('st-escuela').value.trim(),
+    curso:  document.getElementById('st-curso').value.trim(),
+    docente:document.getElementById('st-docente').value.trim()
+  };
+}
+function initStudentForm(){
+  ['st-nombre','st-escuela','st-curso','st-docente'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.value = AppState.student[id.replace('st-','')] || '';
+    el.addEventListener('input',()=>{ AppState.student=readStudent(); saveStudent(); updateUI(); });
+  });
+  document.getElementById('btn-save-student').onclick=()=>{
+    const s=readStudent(); AppState.student=s; saveStudent(); updateUI();
+    if(s.nombre&&s.escuela&&s.curso){
+      toast('Datos guardados', s.nombre, 'linear-gradient(135deg,#22d3ee,#c084fc)','#0f172a','fa-floppy-disk');
+      document.getElementById('st-status').textContent='Guardado en este navegador · '+new Date().toLocaleTimeString('es-AR');
+    } else {
+      toast('Faltan datos','Completá nombre, escuela y curso','linear-gradient(135deg,#fbbf24,#f472b6)','#0f172a','fa-triangle-exclamation');
+    }
+  };
+  if(AppState.student.nombre) document.getElementById('st-status').textContent='Datos restaurados desde este navegador.';
+}
+
+/* Formato de fecha y hora en español (Argentina) */
+function fechaLarga(d=new Date()){
+  const dias=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  const mes=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  return `${dias[d.getDay()]} ${d.getDate()} de ${mes[d.getMonth()]} de ${d.getFullYear()}, ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} h`;
+}
+function fechaCorta(d=new Date()){
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+/* ============================================================
+   EXPORTACIÓN A PDF CON jsPDF
+   ------------------------------------------------------------
+   Estructura del documento:
+     1. Encabezado institucional (banda oscura)
+     2. Datos: fecha, escuela, curso, nombre, docente
+     3. Resultado final (puntaje, porcentaje, estado)
+     4. Detalle pregunta por pregunta (respuesta del alumno,
+        respuesta correcta y explicación)
+     5. Firmas y pie de página con numeración
+   ============================================================ */
+function exportPDF(){
+  /* Validación: la evaluación debe estar terminada y los datos completos */
+  if(!AppState.trivia.finished){
+    toast('Evaluación incompleta','Respondé las 5 preguntas primero','linear-gradient(135deg,#fbbf24,#f472b6)','#0f172a','fa-triangle-exclamation');
+    switchTab('evaluacion'); return;
+  }
+  const st=readStudent();
+  if(!st.nombre || !st.escuela || !st.curso){
+    document.getElementById('pdf-warn').classList.remove('hidden');
+    document.getElementById('st-form').scrollIntoView({behavior:'smooth'});
+    document.getElementById('st-nombre').focus();
+    toast('Faltan datos','Completá nombre, escuela y curso','linear-gradient(135deg,#fbbf24,#f472b6)','#0f172a','fa-id-card');
+    return;
+  }
+  document.getElementById('pdf-warn').classList.add('hidden');
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });   // 210 x 297 mm
+  const W=210, M=15, CW=W-M*2;                          // ancho útil
+  const CYAN=[34,211,238], PURPLE=[192,132,252], LIME=[101,163,13], PINK=[244,114,182],
+        DARK=[15,23,42], SLATE=[71,85,105], LIGHT=[241,245,249], GREY=[148,163,184], RED=[220,38,38];
+  const now=new Date();
+  const correctos=AppState.trivia.correct, total=QUIZ.length;
+  const porcentaje=Math.round(correctos/total*100);
+  const aprobado=correctos>=3;
+
+  /* --- utilidades internas --- */
+  let y=0;
+  const setPage=()=>{ y=0; };
+  const need=(h)=>{ if(y+h>272){ doc.addPage(); y=18; header(false); } };
+  const header=(first)=>{
+    doc.setFillColor(...DARK); doc.rect(0,0,W,first?34:16,'F');
+    doc.setTextColor(...CYAN); doc.setFont('helvetica','bold'); doc.setFontSize(first?15:9);
+    doc.text(first?'NTiCx ACADEMY · INFORME DE EVALUACIÓN':'NTiCx Academy · Informe de evaluación', M, first?15:10);
+    if(first){
+      doc.setTextColor(...GREY); doc.setFont('helvetica','normal'); doc.setFontSize(9);
+      doc.text('Nuevas Tecnologías de la Información y la Conectividad · 4to Año · Educación Secundaria', M, 23);
+      doc.setTextColor(...PURPLE); doc.setFont('helvetica','bold'); doc.setFontSize(8);
+      doc.text('Documento generado automáticamente por la plataforma', M, 29);
+    }
+    y = first? 44 : 26;
+  };
+  const label=(txt,x,yy,w)=>{
+    doc.setTextColor(...GREY); doc.setFont('helvetica','bold'); doc.setFontSize(7);
+    doc.text(txt.toUpperCase(), x, yy);
+    return yy;
+  };
+
+  /* ---------- 1) ENCABEZADO ---------- */
+  header(true);
+
+  /* ---------- 2) DATOS DEL ESTUDIANTE ---------- */
+  doc.setFillColor(...LIGHT); doc.setDrawColor(203,213,225);
+  doc.roundedRect(M, y, CW, 34, 2, 2, 'FD');
+  let ly=y+7;
+  label('Nombre y apellido', M+5, ly);
+  doc.setTextColor(...DARK); doc.setFont('helvetica','bold'); doc.setFontSize(12);
+  doc.text(doc.splitTextToSize(st.nombre, CW-10)[0], M+5, ly+6);
+
+  label('Escuela', M+5, ly+15);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.setTextColor(51,65,85);
+  doc.text(doc.splitTextToSize(st.escuela, CW/2-8)[0], M+5, ly+21);
+
+  label('Curso y división', M+CW/2, ly+15);
+  doc.text(doc.splitTextToSize(st.curso, CW/2-8)[0], M+CW/2, ly+21);
+
+  label('Fecha y hora', M+CW-58, ly);
+  doc.text(fechaCorta(now), M+CW-58, ly+6);
+  if(st.docente){ label('Docente / Materia', M+CW-58, ly+15); doc.text(doc.splitTextToSize(st.docente,55)[0], M+CW-58, ly+21); }
+  y+=42;
+
+  /* ---------- 3) RESULTADO FINAL ---------- */
+  need(34);
+  const bannerColor = aprobado? LIME : [251,191,36];
+  doc.setFillColor(...DARK); doc.roundedRect(M, y, CW, 30, 2.5, 2.5, 'F');
+  doc.setFillColor(...bannerColor); doc.roundedRect(M, y, 4, 30, 2, 2, 'F');
+  doc.setTextColor(...CYAN); doc.setFont('helvetica','bold'); doc.setFontSize(8);
+  doc.text('RESULTADO FINAL', M+10, y+8);
+  doc.setTextColor(255,255,255); doc.setFontSize(20);
+  doc.text(`${correctos} / ${total}`, M+10, y+19);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...GREY);
+  doc.text(`Respuestas correctas · ${porcentaje}% · ${correctos*20} XP obtenidos en la trivia · XP total: ${AppState.xp}`, M+10, y+25);
+  doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...bannerColor);
+  doc.text(aprobado?'APROBADO':'EN PROCESO', W-M-10, y+13, {align:'right'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...GREY);
+  doc.text(aprobado?'Ciudadano/a Digital Experto':'Requiere 3 o más correctas', W-M-10, y+19, {align:'right'});
+  y+=38;
+
+  /* ---------- 4) DETALLE DE PREGUNTAS Y RESPUESTAS ---------- */
+  need(14);
+  doc.setTextColor(...DARK); doc.setFont('helvetica','bold'); doc.setFontSize(12);
+  doc.text('Detalle de preguntas y respuestas', M, y);
+  doc.setDrawColor(...CYAN); doc.setLineWidth(.8); doc.line(M, y+2, M+CW, y+2); doc.setLineWidth(.2);
+  y+=10;
+
+  QUIZ.forEach((q,i)=>{
+    const elegida = AppState.trivia.choices[i];
+    const ok = elegida===q.a;
+    need(52);
+
+    /* Bloque de pregunta */
+    doc.setFillColor(248,250,252); doc.setDrawColor(226,232,240);
+    const qLines=doc.splitTextToSize(`${i+1}. ${q.q}`, CW-14);
+    const optLines=q.o.map(o=>doc.splitTextToSize(o, CW-24));
+    const blockH = 12 + qLines.length*4.6 + optLines.length*5.4 + 20;
+    doc.roundedRect(M, y, CW, blockH, 2, 2, 'FD');
+
+    /* Etiqueta del tema */
+    doc.setFillColor(...hexToRgb(q.c)); doc.roundedRect(M+4, y+3.5, 34, 5.5, 1, 1, 'F');
+    doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(6.5);
+    doc.text(q.tema.toUpperCase(), M+21, y+7.3, {align:'center'});
+
+    /* Enunciado */
+    doc.setTextColor(...DARK); doc.setFont('helvetica','bold'); doc.setFontSize(9.5);
+    doc.text(qLines, M+42, y+8);
+
+    /* Opciones */
+    let oy = y + 8 + qLines.length*4.6 + 3;
+    q.o.forEach((o,j)=>{
+      const isCorrect=j===q.a, isChosen=j===elegida;
+      doc.setFont('helvetica', (isCorrect||isChosen)?'bold':'normal'); doc.setFontSize(8.5);
+      if(isCorrect) doc.setTextColor(22,101,52);
+      else if(isChosen) doc.setTextColor(...RED);
+      else doc.setTextColor(...SLATE);
+
+      const mark = isCorrect && isChosen ? '[X]' : isCorrect ? '[OK]' : isChosen ? '[X]' : '   ';
+      const letter = String.fromCharCode(65+j);
+      doc.text(`${mark} ${letter})`, M+7, oy);
+      doc.text(doc.splitTextToSize(o, CW-30)[0], M+20, oy);
+
+      if(isCorrect||isChosen){
+        doc.setFont('helvetica','bold'); doc.setFontSize(6.5);
+        doc.setTextColor(...(isCorrect?[22,101,52]:RED));
+        const tag = isCorrect&&isChosen ? 'TU RESPUESTA (CORRECTA)' : isCorrect ? 'RESPUESTA CORRECTA' : 'TU RESPUESTA';
+        doc.text(tag, M+CW-5, oy, {align:'right'});
+      }
+      oy += 5.4;
+    });
+
+    /* Explicación */
+    doc.setDrawColor(226,232,240); doc.line(M+5, oy+1, M+CW-5, oy+1);
+    doc.setFont('helvetica','italic'); doc.setFontSize(7.5); doc.setTextColor(...SLATE);
+    doc.text(doc.splitTextToSize('Explicación: '+q.why, CW-14), M+6, oy+5.5);
+
+    y += blockH + 5;
+  });
+
+  /* ---------- 5) RESUMEN, ESTADO Y FIRMAS ---------- */
+  need(48);
+  doc.setFillColor(...LIGHT); doc.roundedRect(M, y, CW, 24, 2, 2, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...DARK);
+  doc.text('Resumen de desempeño', M+5, y+7);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...SLATE);
+  const resumen=[
+    `Respuestas correctas: ${correctos} de ${total} (${porcentaje}%).`,
+    `Puntaje de la evaluación: ${correctos*20} XP · Experiencia total acumulada en la plataforma: ${AppState.xp} XP.`,
+    `Medallas desbloqueadas: ${Object.values(AppState.medals).filter(Boolean).length} de ${MEDALS.length}.`,
+    aprobado?'Estado alcanzado: Ciudadano/a Digital Experto (evaluación aprobada).':'Estado: en proceso. Se recomienda repasar los módulos y reintentar la evaluación.'
+  ];
+  doc.text(resumen, M+5, y+12.5);
+  y+=32;
+
+  need(28);
+  doc.setDrawColor(...GREY); doc.setLineWidth(.4);
+  doc.line(M+8, y+12, M+78, y+12); doc.line(M+CW-78, y+12, M+CW-8, y+12); doc.setLineWidth(.2);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...SLATE);
+  doc.text('Firma del estudiante', M+43, y+17, {align:'center'});
+  doc.text('Firma y sello del docente', M+CW-43, y+17, {align:'center'});
+  y+=26;
+
+  doc.setFont('helvetica','italic'); doc.setFontSize(7); doc.setTextColor(...GREY);
+  doc.text(doc.splitTextToSize('Este informe fue generado automáticamente por NTiCx Academy, una web interactiva pedagógica para la materia Nuevas Tecnologías de la Información y la Conectividad (4to año, Educación Secundaria, Argentina). Los contenidos y datos corresponden al desempeño registrado en el navegador del estudiante.', CW), M, y);
+
+  /* ---------- PIE DE PÁGINA EN TODAS LAS HOJAS ---------- */
+  const pages=doc.getNumberOfPages();
+  for(let p=1;p<=pages;p++){
+    doc.setPage(p);
+    doc.setDrawColor(226,232,240); doc.line(M, 285, W-M, 285);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...GREY);
+    doc.text(`NTiCx Academy · ${st.nombre} · ${st.curso} · ${fechaCorta(now)}`, M, 290);
+    doc.text(`Página ${p} de ${pages}`, W-M, 290, {align:'right'});
+  }
+
+  /* ---------- DESCARGA ---------- */
+  const safe=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'');
+  const filename=`NTiCx-Evaluacion-${safe(st.nombre)}-${safe(st.curso)}-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.pdf`;
+  doc.save(filename);
+
+  toast('PDF descargado', filename, 'linear-gradient(135deg,#a3e635,#22d3ee)','#0f172a','fa-file-pdf');
+  addXP(10,'Exportaste tu evaluación en PDF');
+}
+
+/* Convierte '#rrggbb' a [r,g,b] para jsPDF */
+function hexToRgb(hex){
+  const h=hex.replace('#','');
+  return [parseInt(h.substring(0,2),16),parseInt(h.substring(2,4),16),parseInt(h.substring(4,6),16)];
+}
+
+/* ---------- 9) PERSISTENCIA (localStorage) ---------- */
+const KEY_STATE='nticx_state_v1', KEY_STU='nticx_student_v1';
+function saveState(){
+  try{
+    localStorage.setItem(KEY_STATE, JSON.stringify({
+      xp:AppState.xp,
+      visited:[...AppState.visitedTabs],
+      activities:{
+        multimedia:AppState.activities.multimedia,
+        hyperModes:[...AppState.activities.hyperModes],
+        spectrum:AppState.activities.spectrum,
+        decider:AppState.activities.decider,
+        platforms:[...AppState.activities.platforms]
+      },
+      medals:AppState.medals,
+      trivia:AppState.trivia
+    }));
+  }catch(e){ /* el navegador puede bloquear localStorage */ }
+}
+function saveStudent(){ try{ localStorage.setItem(KEY_STU, JSON.stringify(AppState.student)); }catch(e){} }
+function loadState(){
+  try{
+    const raw=localStorage.getItem(KEY_STATE);
+    if(raw){
+      const s=JSON.parse(raw);
+      AppState.xp=s.xp||0;
+      AppState.visitedTabs=new Set(s.visited||[]);
+      if(s.activities){
+        AppState.activities.multimedia=!!s.activities.multimedia;
+        AppState.activities.hyperModes=new Set(s.activities.hyperModes||[]);
+        AppState.activities.spectrum=!!s.activities.spectrum;
+        AppState.activities.decider=!!s.activities.decider;
+        AppState.activities.platforms=new Set(s.activities.platforms||[]);
+      }
+      Object.assign(AppState.medals, s.medals||{});
+      if(s.trivia) AppState.trivia=Object.assign({choices:{},answered:[],correct:0,finished:false}, s.trivia);
+    }
+    const st=localStorage.getItem(KEY_STU);
+    if(st) AppState.student=Object.assign(AppState.student, JSON.parse(st));
+  }catch(e){}
+}
+function resetProgress(){
+  if(!confirm('¿Seguro que querés borrar tu progreso (XP, medallas y evaluación)? Se conservan tus datos personales.')) return;
+  localStorage.removeItem(KEY_STATE);
+  location.reload();
+}
+
+/* ---------- INICIALIZACIÓN ---------- */
+document.addEventListener('DOMContentLoaded', ()=>{
+  loadState();
+  initTabs(); initPlatforms(); initMultimedia(); initLanguages(); initFormats(); initHypermedia(); initTrivia(); initStudentForm();
+
+  renderBars('chart-uso', CHARTS.uso);
+  renderDonut('chart-feed','legend-feed', CHARTS.feed);
+  applyQuizState();
+  renderMedals(); updateUI();
+
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+  document.getElementById('modal').addEventListener('click', e=>{ if(e.target.id==='modal') closeModal(); });
+
+  if(!AppState.medals.primerPaso) setTimeout(()=>unlockMedal('primerPaso'), 900);
+
+  console.log('%c NTiCx Academy ','background:linear-gradient(90deg,#22d3ee,#c084fc);color:#0f172a;font-weight:800;font-size:14px;border-radius:6px');
+  console.log('%cProbá: AppState · addXP(10,"test") · switchTab("evaluacion") · exportPDF()','color:#a3e635');
+});
+</script>
+</body>
+</html>
+
